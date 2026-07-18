@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>توريدات وحركات الفروع | نظام MO</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+  </head>
+  <body>
+    <!-- الشريط الجانبي -->
+    <nav class="sidebar" id="sidebar">
+      <div class="brand">
+        <h2>MO<span>.</span></h2>
+        <small>نظام إدارة المحلات</small>
+      </div>
+      <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+          <a class="nav-link" href="dashboard.html">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branch-full-report.html"
+            ><i class="fas fa-chart-bar"></i> تقرير شامل الفروع</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branches.html">
+            <i class="fas fa-store"></i> الفروع
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="products.html">
+            <i class="fas fa-tags"></i> المنتجات
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="warehouse-supplies.html">
+            <i class="fas fa-arrow-down"></i> توريدات المخزن
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="warehouse.html">
+            <i class="fas fa-warehouse"></i> المخزن الرئيسي
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="branch-transfers.html">
+            <i class="fas fa-exchange-alt"></i> توريدات الفروع
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="day-closing.html">
+            <i class="fas fa-lock"></i> إقفال اليوم
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="day-closing-reports.html">
+            <i class="fas fa-file-alt"></i> تقارير الإقفال
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="inventory.html">
+            <i class="fas fa-clipboard-list"></i> الجرد
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="inventory-reports.html">
+            <i class="fas fa-chart-bar"></i> تقارير الجرد
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stock-audit.html">
+            <i class="fas fa-history"></i> سجل التعديلات
+          </a>
+        </li>
+        <li class="nav-item mt-4">
+          <a class="nav-link text-danger" href="#" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+    ></div>
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="main-content">
+      <div
+        class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
+      >
+        <div>
+          <h4 class="mb-1" style="color: var(--primary-color)">
+            <i class="fas fa-exchange-alt"></i> توريدات وحركات الفروع
+          </h4>
+          <small class="text-muted"
+            >سجل جميع حركات المخزون (توريد، تحويل، مرتجع، استبدال)</small
+          >
+        </div>
+      </div>
+
+      <!-- أزرار الإجراءات السريعة -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+          <button
+            class="btn btn-primary w-100"
+            onclick="showMovementModal('transfer')"
+            style="
+              background: #0d6efd;
+              border: none;
+              padding: 15px 10px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 15px;
+              transition: all 0.3s ease;
+            "
+          >
+            <div style="font-size: 28px; margin-bottom: 5px">🔄</div>
+            تحويل
+          </button>
+        </div>
+        <div class="col-md-3 col-6">
+          <button
+            class="btn btn-danger w-100"
+            onclick="showMovementModal('return')"
+            style="
+              background: #dc3545;
+              border: none;
+              padding: 15px 10px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 15px;
+              transition: all 0.3s ease;
+            "
+          >
+            <div style="font-size: 28px; margin-bottom: 5px">↩️</div>
+            مرتجع مخزن
+          </button>
+        </div>
+        <div class="col-md-3 col-6">
+          <button
+            class="btn btn-info w-100 text-white"
+            onclick="showMovementModal('customer_return')"
+            style="
+              background: #0dcaf0;
+              border: none;
+              padding: 15px 10px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 15px;
+              transition: all 0.3s ease;
+            "
+          >
+            <div style="font-size: 28px; margin-bottom: 5px">👤</div>
+            مرتجع عميل
+          </button>
+        </div>
+        <div class="col-md-3 col-6">
+          <button
+            class="btn btn-secondary w-100"
+            onclick="showMovementModal('exchange')"
+            style="
+              background: #6c757d;
+              border: none;
+              padding: 15px 10px;
+              border-radius: 12px;
+              font-weight: 600;
+              font-size: 15px;
+              transition: all 0.3s ease;
+            "
+          >
+            <div style="font-size: 28px; margin-bottom: 5px">🔀</div>
+            استبدال
+          </button>
+        </div>
+      </div>
+
+      <!-- فلاتر -->
+      <div class="filter-section">
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label form-label-custom">من تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateFrom"
+            />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label form-label-custom">إلى تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateTo"
+            />
+          </div>
+          <div class="col-md-2">
+            <label class="form-label form-label-custom">الفرع</label>
+            <select class="form-control form-control-custom" id="filterBranch">
+              <option value="all">جميع الفروع</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label form-label-custom">نوع الحركة</label>
+            <select class="form-control form-control-custom" id="filterType">
+              <option value="all">الكل</option>
+              <option value="transfer">تحويل بين الفروع</option>
+              <option value="return">مرتجع للمخزن</option>
+              <option value="customer_return">مرتجع من عميل</option>
+              <option value="exchange">استبدال</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <label class="form-label form-label-custom">المنتج</label>
+            <select class="form-control form-control-custom" id="filterProduct">
+              <option value="all">جميع المنتجات</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button
+              class="btn btn-secondary-custom w-100 mt-4"
+              onclick="applyFilters()"
+            >
+              <i class="fas fa-filter"></i> تطبيق
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- إحصائيات -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-number" id="totalTransfers">0</div>
+            <div class="stat-label">إجمالي العمليات</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-number" id="totalItemsTransferred">0</div>
+            <div class="stat-label">إجمالي القطع</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-number" id="branchesCount">0</div>
+            <div class="stat-label">عدد الفروع</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="stat-number" id="daysCount">0</div>
+            <div class="stat-label">عدد الأيام</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- جدول العمليات -->
+      <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>نوع الحركة</th>
+                  <th>المنتج</th>
+                  <th>الكمية</th>
+                  <th>من</th>
+                  <th>إلى</th>
+                  <th>التفاصيل</th>
+                  <th>التاريخ</th>
+                </tr>
+              </thead>
+              <tbody id="transfersTable">
+                <tr>
+                  <td colspan="8" class="text-center text-muted">
+                    جاري التحميل...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal إضافة حركة -->
+    <div class="modal fade" id="movementModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div
+            class="modal-header"
+            style="background: var(--primary-color); color: white"
+          >
+            <h5 class="modal-title" id="movementModalTitle">
+              <i class="fas fa-plus"></i> إضافة حركة جديدة
+            </h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="movementForm">
+              <input type="hidden" id="movementType" />
+
+              <div class="row g-3">
+                <!-- الفرع المصدر - سطر لوحده -->
+                <div class="col-12" id="fromBranchGroup">
+                  <label class="form-label form-label-custom"
+                    >الفرع المصدر *</label
+                  >
+                  <select
+                    class="form-control form-control-custom"
+                    id="fromBranch"
+                    required
+                  >
+                    <option value="">اختر الفرع</option>
+                  </select>
+                </div>
+
+                <!-- الفرع الهدف - للتحويل فقط -->
+                <div class="col-12" id="toBranchGroup">
+                  <label class="form-label form-label-custom"
+                    >الفرع الهدف *</label
+                  >
+                  <select
+                    class="form-control form-control-custom"
+                    id="toBranch"
+                    required
+                  >
+                    <option value="">اختر الفرع</option>
+                  </select>
+                </div>
+
+                <!-- المنتج والكمية - للتحويل ومرتجع المخزن ومرتجع العميل -->
+                <div class="col-md-6" id="productGroup">
+                  <label class="form-label form-label-custom">المنتج *</label>
+                  <select
+                    class="form-control form-control-custom"
+                    id="movementProduct"
+                    required
+                  >
+                    <option value="">اختر المنتج</option>
+                  </select>
+                </div>
+
+                <div class="col-md-6" id="quantityGroup">
+                  <label class="form-label form-label-custom">الكمية *</label>
+                  <input
+                    type="number"
+                    class="form-control form-control-custom"
+                    id="movementQuantity"
+                    min="1"
+                    required
+                  />
+                </div>
+
+                <!-- ============================================
+                     قسم الاستبدال (Exchange)
+                     ============================================ -->
+
+                <!-- المنتج المرتجع -->
+                <div
+                  class="col-md-6"
+                  id="oldProductGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom text-danger">
+                    <i class="fas fa-undo-alt"></i> المنتج المرتجع *
+                  </label>
+                  <select
+                    class="form-control form-control-custom"
+                    id="oldProduct"
+                  >
+                    <option value="">اختر المنتج المرتجع</option>
+                  </select>
+                </div>
+
+                <!-- كمية المرتجع -->
+                <div
+                  class="col-md-6"
+                  id="oldQuantityGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom text-danger">
+                    <i class="fas fa-minus-circle"></i> كمية المرتجع *
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control form-control-custom"
+                    id="oldQuantity"
+                    min="1"
+                    placeholder="أدخل الكمية"
+                  />
+                </div>
+
+                <!-- المنتج الجديد -->
+                <div
+                  class="col-md-6"
+                  id="newProductGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom text-success">
+                    <i class="fas fa-exchange-alt"></i> المنتج الجديد *
+                  </label>
+                  <select
+                    class="form-control form-control-custom"
+                    id="newProduct"
+                  >
+                    <option value="">اختر المنتج الجديد</option>
+                  </select>
+                </div>
+
+                <!-- كمية الجديد -->
+                <div
+                  class="col-md-6"
+                  id="newQuantityGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom text-success">
+                    <i class="fas fa-plus-circle"></i> كمية الجديد *
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control form-control-custom"
+                    id="newQuantity"
+                    min="1"
+                    placeholder="أدخل الكمية"
+                  />
+                </div>
+
+                <!-- بيانات العميل (لمرتجع العميل) -->
+                <div
+                  class="col-md-6"
+                  id="customerNameGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom"
+                    >اسم العميل *</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control form-control-custom"
+                    id="customerName"
+                  />
+                </div>
+
+                <div
+                  class="col-md-6"
+                  id="customerPhoneGroup"
+                  style="display: none"
+                >
+                  <label class="form-label form-label-custom"
+                    >هاتف العميل</label
+                  >
+                  <input
+                    type="tel"
+                    class="form-control form-control-custom"
+                    id="customerPhone"
+                  />
+                </div>
+
+                <div class="col-12">
+                  <label class="form-label form-label-custom"
+                    >السبب / ملاحظات</label
+                  >
+                  <textarea
+                    class="form-control form-control-custom"
+                    id="movementReason"
+                    rows="2"
+                  ></textarea>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              إلغاء
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary-custom"
+              onclick="saveMovement()"
+            >
+              <i class="fas fa-save"></i> حفظ
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/admin/branch-transfers.js"></script>
+  </body>
+</html>

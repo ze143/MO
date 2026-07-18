@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>الجرد | نظام MO</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+  </head>
+  <body>
+    <nav class="sidebar" id="sidebar">
+      <div class="brand">
+        <h2>MO<span>.</span></h2>
+        <small>نظام إدارة المحلات</small>
+      </div>
+      <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+          <a class="nav-link" href="dashboard.html">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branch-full-report.html"
+            ><i class="fas fa-chart-bar"></i> تقرير شامل الفروع</a
+          >
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branches.html">
+            <i class="fas fa-store"></i> الفروع
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="products.html">
+            <i class="fas fa-tags"></i> المنتجات
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="warehouse-supplies.html">
+            <i class="fas fa-arrow-down"></i> توريدات المخزن
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="warehouse.html">
+            <i class="fas fa-warehouse"></i> المخزن الرئيسي
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branch-transfers.html">
+            <i class="fas fa-exchange-alt"></i> توريدات الفروع
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link" href="day-closing.html">
+            <i class="fas fa-lock"></i> إقفال اليوم
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="day-closing-reports.html">
+            <i class="fas fa-file-alt"></i> تقارير الإقفال
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="inventory.html">
+            <i class="fas fa-clipboard-list"></i> الجرد
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="inventory-reports.html">
+            <i class="fas fa-chart-bar"></i> تقارير الجرد
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stock-audit.html">
+            <i class="fas fa-history"></i> سجل التعديلات
+          </a>
+        </li>
+        <li class="nav-item mt-4">
+          <a class="nav-link text-danger" href="#" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+    ></div>
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="main-content">
+      <div
+        class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
+      >
+        <div>
+          <h4 class="mb-1" style="color: var(--primary-color)">
+            <i class="fas fa-clipboard-list"></i> الجرد
+          </h4>
+          <small class="text-muted">جرد المخزون الفعلي ومقارنته بالنظام</small>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="row g-4">
+            <div class="col-md-4">
+              <label class="form-label form-label-custom">اختر الفرع *</label>
+              <select
+                class="form-control form-control-custom"
+                id="inventoryBranch"
+                onchange="loadInventoryData()"
+              >
+                <option value="">-- اختر الفرع --</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label form-label-custom">تاريخ الجرد</label>
+              <input
+                type="date"
+                class="form-control form-control-custom"
+                id="inventoryDate"
+              />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label form-label-custom">ملاحظات</label>
+              <input
+                type="text"
+                class="form-control form-control-custom"
+                id="inventoryNotes"
+                placeholder="ملاحظات حول الجرد"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- جدول الجرد -->
+      <div class="card mt-4" id="inventoryTable" style="display: none">
+        <div class="card-header">
+          <i class="fas fa-list"></i> عناصر الجرد
+          <button
+            class="btn btn-primary-custom btn-sm float-start"
+            onclick="saveInventory()"
+          >
+            <i class="fas fa-save"></i> حفظ الجرد
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>المنتج</th>
+                  <th>الكمية بالنظام</th>
+                  <th>الكمية الفعلية</th>
+                  <th>الفروقات</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryItemsTable">
+                <tr>
+                  <td colspan="5" class="text-center text-muted">
+                    اختر الفرع لعرض المنتجات
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/admin/inventory.js"></script>
+  </body>
+</html>

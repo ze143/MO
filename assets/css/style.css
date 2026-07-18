@@ -1,0 +1,736 @@
+/* ============================================
+   نظام MO - CSS الرئيسي
+   الألوان: بيج، عنابي، ذهبي
+   ============================================ */
+
+:root {
+  --primary-color: #8b1a1a; /* عنابي */
+  --secondary-color: #d4a574; /* ذهبي */
+  --bg-color: #f5f0eb; /* بيج فاتح */
+  --bg-card: #ffffff;
+  --text-dark: #2c1810;
+  --text-light: #ffffff;
+  --border-color: #e8ddd5;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --radius: 12px;
+  --transition: all 0.3s ease;
+}
+
+/* ============================================
+   التنسيق العام
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", "Tahoma", "Arial", sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-dark);
+  direction: rtl;
+  text-align: right;
+  min-height: 100vh;
+}
+
+/* ============================================
+   شريط التنقل الجانبي
+   ============================================ */
+
+.sidebar {
+  background: linear-gradient(180deg, var(--primary-color) 0%, #5c1212 100%);
+  min-height: 100vh;
+  padding: 0;
+  transition: var(--transition);
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 280px;
+  z-index: 1050;
+  overflow-y: auto;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.15);
+}
+
+.sidebar .brand {
+  padding: 25px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.sidebar .brand h2 {
+  color: var(--secondary-color);
+  font-weight: 700;
+  margin: 0;
+  font-size: 28px;
+  letter-spacing: 1px;
+}
+
+.sidebar .brand h2 span {
+  color: #ffffff;
+}
+
+.sidebar .brand small {
+  color: rgba(255, 255, 255, 0.6);
+  display: block;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  padding: 12px 25px;
+  border-radius: 0;
+  transition: var(--transition);
+  border-right: 3px solid transparent;
+  margin: 2px 0;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar .nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-right-color: var(--secondary-color);
+}
+
+.sidebar .nav-link.active {
+  background: rgba(212, 165, 116, 0.2);
+  color: var(--secondary-color);
+  border-right-color: var(--secondary-color);
+}
+
+.sidebar .nav-link i {
+  width: 22px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.sidebar .nav-link .badge {
+  background: var(--secondary-color);
+  color: var(--text-dark);
+  margin-right: auto;
+}
+
+/* ============================================
+   زر هامبرغر للموبايل
+   ============================================ */
+
+.hamburger-btn {
+  background: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 24px;
+  cursor: pointer;
+  display: none;
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  z-index: 1060;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.hamburger-btn:hover {
+  background: #5c1212;
+  transform: scale(1.05);
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+/* ============================================
+   المحتوى الرئيسي
+   ============================================ */
+
+.main-content {
+  margin-right: 280px;
+  padding: 30px;
+  min-height: 100vh;
+  transition: var(--transition);
+}
+
+/* ============================================
+   البطاقات
+   ============================================ */
+
+.card {
+  background: var(--bg-card);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  margin-bottom: 25px;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.card-header {
+  background: transparent;
+  border-bottom: 1px solid var(--border-color);
+  padding: 18px 25px;
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--primary-color);
+}
+
+.card-body {
+  padding: 25px;
+}
+
+/* ============================================
+   بطاقات الإحصائيات
+   ============================================ */
+
+.stat-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 22px 25px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  border-right: 4px solid var(--secondary-color);
+  margin-bottom: 20px;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 35px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .stat-icon {
+  font-size: 32px;
+  color: var(--secondary-color);
+  margin-bottom: 10px;
+}
+
+.stat-card .stat-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.stat-card .stat-label {
+  color: #888;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+/* ============================================
+   الأزرار
+   ============================================ */
+
+.btn-primary-custom {
+  background: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.btn-primary-custom:hover {
+  background: #5c1212;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(139, 26, 26, 0.3);
+}
+
+.btn-secondary-custom {
+  background: var(--secondary-color);
+  border: none;
+  color: var(--text-dark);
+  padding: 10px 25px;
+  border-radius: 8px;
+  transition: var(--transition);
+  font-weight: 500;
+}
+
+.btn-secondary-custom:hover {
+  background: #c49a6a;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(212, 165, 116, 0.3);
+}
+
+/* ============================================
+   الجداول
+   ============================================ */
+
+.table-custom {
+  background: white;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.table-custom thead {
+  background: var(--primary-color);
+  color: white;
+}
+
+.table-custom thead th {
+  padding: 15px 20px;
+  font-weight: 500;
+  border: none;
+}
+
+.table-custom tbody td {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.table-custom tbody tr:hover {
+  background: #f8f5f2;
+}
+
+/* ============================================
+   نماذج الإدخال
+   ============================================ */
+
+.form-control-custom {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 15px;
+  transition: var(--transition);
+  background: white;
+}
+
+.form-control-custom:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
+.form-label-custom {
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+/* ============================================
+   صفحة تسجيل الدخول
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary-color) 0%, #3a0a0a 100%);
+  padding: 20px;
+}
+
+.login-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 50px 40px;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.login-card .brand {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.login-card .brand h1 {
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 36px;
+}
+
+.login-card .brand h1 span {
+  color: var(--secondary-color);
+}
+
+.login-card .brand p {
+  color: #888;
+  margin-top: 5px;
+}
+
+.login-card .form-control {
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 18px;
+  transition: var(--transition);
+}
+
+.login-card .form-control:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}
+
+.login-card .btn-login {
+  background: var(--primary-color);
+  border: none;
+  color: white;
+  padding: 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 18px;
+  transition: var(--transition);
+  width: 100%;
+}
+
+.login-card .btn-login:hover {
+  background: #5c1212;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(139, 26, 26, 0.4);
+}
+
+/* ============================================
+   إشعارات Toast
+   ============================================ */
+
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 9999;
+}
+
+.toast-custom {
+  background: white;
+  border-radius: var(--radius);
+  padding: 15px 25px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  animation: slideIn 0.3s ease;
+  border-right: 4px solid var(--secondary-color);
+  min-width: 300px;
+}
+
+.toast-custom.success {
+  border-right-color: #28a745;
+}
+
+.toast-custom.error {
+  border-right-color: #dc3545;
+}
+
+.toast-custom.warning {
+  border-right-color: #ffc107;
+}
+
+.toast-custom .toast-icon {
+  font-size: 24px;
+}
+
+.toast-custom .toast-message {
+  flex: 1;
+  font-size: 15px;
+}
+
+.toast-custom .toast-close {
+  cursor: pointer;
+  font-size: 20px;
+  color: #999;
+  transition: var(--transition);
+  background: none;
+  border: none;
+}
+
+.toast-custom .toast-close:hover {
+  color: #333;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   شاشة التحميل
+   ============================================ */
+
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.loading-screen .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   تنسيقات إضافية
+   ============================================ */
+
+.badge-status {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-status.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.badge-status.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.badge-status.closed {
+  background: #cce5ff;
+  color: #004085;
+}
+
+.badge-status.open {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* ============================================
+   التجاوب (Responsive)
+   ============================================ */
+
+@media (max-width: 991px) {
+  .sidebar {
+    transform: translateX(100%);
+    width: 300px;
+  }
+
+  .sidebar.show {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  .main-content {
+    margin-right: 0;
+    padding: 20px;
+  }
+
+  .hamburger-btn {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-card {
+    padding: 30px 20px;
+  }
+
+  .stat-card .stat-number {
+    font-size: 22px;
+  }
+
+  .card-body {
+    padding: 18px;
+  }
+
+  .table-custom thead th,
+  .table-custom tbody td {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .sidebar {
+    width: 280px;
+  }
+}
+
+@media (max-width: 576px) {
+  .main-content {
+    padding: 15px;
+  }
+
+  .login-card .brand h1 {
+    font-size: 28px;
+  }
+
+  .toast-custom {
+    min-width: auto;
+    width: calc(100% - 30px);
+  }
+}
+
+/* ============================================
+   تنسيقات خاصة بصفحات التقارير
+   ============================================ */
+
+.report-header {
+  background: white;
+  padding: 20px 25px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 25px;
+}
+
+.report-header h4 {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.filter-section {
+  background: white;
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 25px;
+}
+
+/* ============================================
+   تنسيقات المخططات البيانية
+   ============================================ */
+
+.chart-container {
+  background: white;
+  padding: 20px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 25px;
+}
+
+.chart-container canvas {
+  max-height: 350px;
+}
+
+.branch-stock-card .branch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f8f5f2;
+  border-radius: 8px 8px 0 0;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.branch-stock-card .branch-stats {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.branch-stock-card .branch-stats .stat {
+  font-size: 14px;
+}
+.branch-stock-card .branch-stats .stat .number {
+  font-weight: 700;
+  color: var(--primary-color);
+}
+.btn-view-products {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.btn-view-products:hover {
+  background: #5c1212;
+  transform: scale(1.05);
+}
+/* ============================================
+   تنسيقات الأصناف في صفحة الفرع
+   ============================================ */
+
+.product-item {
+  background: white;
+  border-radius: var(--radius);
+  padding: 15px 20px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition);
+  border-right: 3px solid transparent;
+}
+
+.product-item:hover {
+  border-right-color: var(--secondary-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.product-item .product-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-item .product-name {
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.product-item .product-details {
+  font-size: 13px;
+  color: #888;
+  margin-top: 2px;
+}
+
+.product-item .product-stock {
+  font-weight: 700;
+  color: var(--primary-color);
+  font-size: 18px;
+}
+
+.product-item .product-input {
+  width: 80px;
+  text-align: center;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 16px;
+  transition: var(--transition);
+}
+
+.product-item .product-input:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.2);
+}

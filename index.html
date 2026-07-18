@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام MO - إدارة محلات الملابس</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <style>
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color) 0%, #3A0A0A 100%);
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .hero-section h1 {
+            font-size: 56px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+        
+        .hero-section h1 span {
+            color: var(--secondary-color);
+        }
+        
+        .hero-section p {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .hero-section .btn-start {
+            background: var(--secondary-color);
+            color: var(--text-dark);
+            padding: 15px 50px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: 600;
+            border: none;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .hero-section .btn-start:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 40px rgba(212, 165, 116, 0.4);
+            color: var(--text-dark);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .feature-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px 20px;
+            border-radius: var(--radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+        }
+        
+        .feature-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .feature-item i {
+            font-size: 40px;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+        }
+        
+        .feature-item h5 {
+            font-weight: 700;
+        }
+        
+        .feature-item p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 32px;
+            }
+            .hero-section p {
+                font-size: 16px;
+            }
+            .features {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div>
+            <h1>MO<span>.</span></h1>
+            <p>نظام متكامل لإدارة سلسلة محلات الملابس<br>بكل سهولة واحترافية</p>
+            <a href="pages/login.html" class="btn-start">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </a>
+            
+            <div class="features">
+                <div class="feature-item">
+                    <i class="fas fa-store"></i>
+                    <h5>إدارة الفروع</h5>
+                    <p>تحكم كامل في جميع الفروع والمستخدمين</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-boxes"></i>
+                    <h5>المخزون</h5>
+                    <p>تتبع المخزون في المخزن الرئيسي والفروع</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-chart-line"></i>
+                    <h5>التقارير</h5>
+                    <p>تقارير شاملة عن المبيعات والأداء</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-lock"></i>
+                    <h5>إقفال اليوم</h5>
+                    <p>إقفال يومي آمن مع تحديث المخزون تلقائياً</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

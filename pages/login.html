@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>تسجيل الدخول - نظام MO</title>
+
+    <!-- Bootstrap 5 -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+      rel="stylesheet"
+    />
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../assets/css/style.css" />
+  </head>
+  <body>
+    <div class="login-page">
+      <div class="login-card">
+        <div class="brand">
+          <h1>MO<span>.</span></h1>
+          <p>نظام إدارة سلسلة محلات الملابس</p>
+        </div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="mb-3">
+            <label for="username" class="form-label form-label-custom">
+              <i class="fas fa-user"></i> اسم المستخدم
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              id="username"
+              placeholder="أدخل اسم المستخدم"
+              required
+              autofocus
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label form-label-custom">
+              <i class="fas fa-lock"></i> كلمة المرور
+            </label>
+            <input
+              type="password"
+              class="form-control"
+              id="password"
+              placeholder="أدخل كلمة المرور"
+              required
+            />
+          </div>
+
+          <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="rememberMe" />
+            <label class="form-check-label" for="rememberMe">تذكرني</label>
+          </div>
+
+          <button type="submit" class="btn-login" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+          </button>
+        </form>
+
+        
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/auth.js"></script>
+
+    <script>
+      async function handleLogin(event) {
+        event.preventDefault();
+
+        const username = document.getElementById("username").value.trim();
+        const password = document.getElementById("password").value;
+        const loginBtn = document.getElementById("loginBtn");
+
+        if (!username || !password) {
+          showToast("يرجى إدخال اسم المستخدم وكلمة المرور", "warning");
+          return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+
+        try {
+          // استخدام authManager لتسجيل الدخول
+          const result = await authManager.login(username, password);
+
+          if (result) {
+            // توجيه حسب الدور
+            let redirectUrl;
+            switch (result.user.role) {
+              case "admin":
+                redirectUrl = "/pages/admin/dashboard.html";
+                break;
+              case "branch_user":
+                redirectUrl = "/pages/branch/dashboard.html";
+                break;
+              case "owner":
+                redirectUrl = "/pages/owner/dashboard.html";
+                break;
+              default:
+                redirectUrl = "/pages/login.html";
+            }
+
+            setTimeout(() => {
+              window.location.href = redirectUrl;
+            }, 500);
+          } else {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML =
+              '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+          }
+        } catch (error) {
+          console.error("خطأ:", error);
+          showToast("حدث خطأ غير متوقع", "error");
+          loginBtn.disabled = false;
+          loginBtn.innerHTML =
+            '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+        }
+      }
+    </script>
+  </body>
+</html>

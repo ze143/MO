@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقارير المخزون - المالك | نظام MO</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    <nav class="sidebar" id="sidebar">
+        <div class="brand">
+            <h2>MO<span>.</span></h2>
+            <small>نظام إدارة المحلات</small>
+        </div>
+        <ul class="nav flex-column mt-3">
+            <li class="nav-item">
+                <a class="nav-link" href="dashboard.html">
+                    <i class="fas fa-chart-pie"></i> لوحة التحكم
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="branches-report.html">
+                    <i class="fas fa-store"></i> تقارير الفروع
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="sales-report.html">
+                    <i class="fas fa-chart-line"></i> تقارير المبيعات
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" href="stock-report.html">
+                    <i class="fas fa-boxes"></i> تقارير المخزون
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link text-danger" href="#" onclick="handleLogout()">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <button class="hamburger-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1" style="color: var(--primary-color);">
+                    <i class="fas fa-boxes"></i> تقارير المخزون
+                </h4>
+                <small class="text-muted">عرض تقارير المخزون في المخزن الرئيسي والفروع</small>
+            </div>
+        </div>
+
+        <!-- إحصائيات سريعة -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalWarehouse">0</div>
+                    <div class="stat-label">مخزون المخزن الرئيسي</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalBranchesStock">0</div>
+                    <div class="stat-label">إجمالي مخزون الفروع</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalOverall">0</div>
+                    <div class="stat-label">إجمالي المخزون الكلي</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProducts">0</div>
+                    <div class="stat-label">عدد المنتجات</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- اختيار الفرع -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label form-label-custom">اختر الفرع</label>
+                    <select class="form-control form-control-custom" id="stockBranch" onchange="loadBranchStock()">
+                        <option value="warehouse">المخزن الرئيسي</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label form-label-custom">بحث</label>
+                    <input type="text" class="form-control form-control-custom" 
+                           id="searchStock" placeholder="بحث عن منتج..." 
+                           oninput="searchStock()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label form-label-custom">حالة المخزون</label>
+                    <select class="form-control form-control-custom" id="filterStockStatus" onchange="searchStock()">
+                        <option value="all">جميع الحالات</option>
+                        <option value="ok">متوفر</option>
+                        <option value="low">منخفض</option>
+                        <option value="out">نفذ</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول المخزون -->
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>المنتج</th>
+                                <th>الكود</th>
+                                <th>الفئة</th>
+                                <th>الكمية</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTable">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">جاري التحميل...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/owner/stock-report.js"></script>
+</body>
+</html>
