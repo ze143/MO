@@ -1,5 +1,5 @@
 // ============================================
-// تقارير المخزون - المالك
+// تقارير المخزون الرئيسي - المالك
 // ============================================
 
 class StockReportManager {
@@ -13,7 +13,7 @@ class StockReportManager {
         if (!authManager.requireRole(ROLES.OWNER)) return;
 
         await this.loadData();
-        await this.loadBranches();
+        await this.loadCategories();
     }
 
     async loadData() {
@@ -31,135 +31,179 @@ class StockReportManager {
         }
     }
 
-    async loadBranches() {
-        try {
-            const response = await supabaseRequest('branches?select=id,name&is_active=eq.true&order=name.asc');
-            const select = document.getElementById('stockBranch');
-            
-            response.forEach(branch => {
-                const option = document.createElement('option');
-                option.value = branch.id;
-                option.textContent = branch.name;
-                select.appendChild(option);
-            });
-
-        } catch (error) {
-            console.error('خطأ في تحميل الفروع:', error);
-        }
-    }
+    // ============================================
+    // الإحصائيات
+    // ============================================
 
     async loadStats() {
         try {
-            const warehouse = await supabaseRequest('warehouse_stock?select=quantity');
-            const totalWarehouse = warehouse.reduce((sum, w) => sum + w.quantity, 0);
-            document.getElementById('totalWarehouse').textContent = totalWarehouse;
+            // جلب جميع المنتجات والمخزون
+            const stock = await supabaseRequest('warehouse_stock?select=product_id,quantity');
+            const products = await supabaseRequest('products?select=id,min_stock&is_active=eq.true');
 
-            const branches = await supabaseRequest('branch_stock?select=quantity');
-            const totalBranches = branches.reduce((sum, b) => sum + b.quantity, 0);
-            document.getElementById('totalBranchesStock').textContent = totalBranches;
+            // إجمالي المنتجات
+            const totalProductsEl = document.getElementById('totalProducts');
+            if (totalProductsEl) totalProductsEl.textContent = products.length;
 
-            document.getElementById('totalOverall').textContent = totalWarehouse + totalBranches;
+            // إجمالي القطع
+            const totalItems = stock.reduce((sum, s) => sum + s.quantity, 0);
+            const totalItemsEl = document.getElementById('totalItems');
+            if (totalItemsEl) totalItemsEl.textContent = totalItems;
 
-            const products = await supabaseRequest('products?select=id&is_active=eq.true');
-            document.getElementById('totalProducts').textContent = products.length;
+            // المنتجات المنخفضة
+            const lowStock = stock.filter(item => {
+                const product = products.find(p => p.id === item.product_id);
+                const minStock = product?.min_stock || 10;
+                return item.quantity > 0 && item.quantity < minStock;
+            });
+            const lowStockEl = document.getElementById('lowStock');
+            if (lowStockEl) lowStockEl.textContent = lowStock.length;
+
+            // المنتجات النافذة
+            const outOfStock = stock.filter(item => item.quantity <= 0);
+            const outOfStockEl = document.getElementById('outOfStock');
+            if (outOfStockEl) outOfStockEl.textContent = outOfStock.length;
 
         } catch (error) {
             console.error('خطأ في تحميل الإحصائيات:', error);
         }
     }
 
+    // ============================================
+    // تحميل مخزون المخزن
+    // ============================================
+
     async loadWarehouseStock() {
         try {
+            // 1. جلب مخزون المخزن
             const stock = await supabaseRequest('warehouse_stock?select=product_id,quantity');
-            
+            console.log('📦 stock:', stock);
+
+            // 2. جلب أسماء المنتجات مع التفاصيل
             const productIds = [...new Set(stock.map(item => item.product_id).filter(id => id))];
-            let products = [];
+            console.log('📦 productIds:', productIds);
+            
+            let productMap = {};
             if (productIds.length > 0) {
-                const productQuery = productIds.map(id => `id=eq.${id}`).join('&');
-                products = await supabaseRequest(`products?select=id,name,code,category,min_stock&${productQuery}`);
+                const productQuery = productIds.map(id => `id.eq.${id}`).join(',');
+                const products = await supabaseRequest(`products?select=id,name,code,category,min_stock&or=(${productQuery})`);
+                console.log('📦 products from DB:', products);
+                
+                for (const p of products) {
+                    productMap[p.id] = p;
+                }
+                console.log('📦 productMap:', productMap);
             }
-            
-            const productMap = {};
-            products.forEach(p => productMap[p.id] = p);
-            
+
+            // 3. دمج البيانات
             this.currentData = stock.map(item => ({
                 ...item,
-                products: productMap[item.product_id] || { name: 'غير معروف', code: '', category: '', min_stock: 10 },
-                source: 'warehouse'
+                products: productMap[item.product_id] || { 
+                    name: 'غير معروف', 
+                    code: '', 
+                    category: '', 
+                    min_stock: 10 
+                }
             }));
 
             this.renderTable(this.currentData);
 
         } catch (error) {
             console.error('خطأ في تحميل مخزون المخزن:', error);
+            showToast('حدث خطأ في تحميل البيانات', 'error');
         }
     }
 
-    async loadBranchStock() {
-        const branchId = document.getElementById('stockBranch').value;
-        
-        if (branchId === 'warehouse') {
-            await this.loadWarehouseStock();
-            return;
-        }
+    // ============================================
+    // تحميل الفئات
+    // ============================================
 
-        showLoading();
-
+    async loadCategories() {
         try {
-            const stock = await supabaseRequest(`
-                branch_stock?select=product_id,quantity&branch_id=eq.${branchId}
-            `);
-
-            const productIds = [...new Set(stock.map(item => item.product_id).filter(id => id))];
-            let products = [];
-            if (productIds.length > 0) {
-                const productQuery = productIds.map(id => `id=eq.${id}`).join('&');
-                products = await supabaseRequest(`products?select=id,name,code,category,min_stock&${productQuery}`);
+            const products = await supabaseRequest('products?select=category&is_active=eq.true');
+            const categories = [...new Set(products.map(p => p.category).filter(c => c))];
+            
+            const select = document.getElementById('filterCategory');
+            if (!select) {
+                console.error('❌ filterCategory element not found');
+                return;
             }
             
-            const productMap = {};
-            products.forEach(p => productMap[p.id] = p);
+            // ✅ حفظ الخيار الافتراضي
+            const defaultOption = document.createElement('option');
+            defaultOption.value = 'all';
+            defaultOption.textContent = 'جميع الفئات';
+            select.appendChild(defaultOption);
             
-            this.currentData = stock.map(item => ({
-                ...item,
-                products: productMap[item.product_id] || { name: 'غير معروف', code: '', category: '', min_stock: 10 },
-                source: 'branch'
-            }));
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
 
-            this.renderTable(this.currentData);
+            console.log('✅ تم تحميل الفئات:', categories);
 
         } catch (error) {
-            console.error('خطأ في تحميل مخزون الفرع:', error);
-            showToast('حدث خطأ في تحميل البيانات', 'error');
-        } finally {
-            hideLoading();
+            console.error('خطأ في تحميل الفئات:', error);
         }
     }
+
+    // ============================================
+    // عرض الجدول
+    // ============================================
 
     renderTable(stock) {
         const tbody = document.getElementById('stockTable');
+        if (!tbody) {
+            console.error('❌ stockTable element not found');
+            return;
+        }
+
         if (stock.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted">لا توجد منتجات في هذا المخزن</td>
+                    <td colspan="7" class="text-center text-muted">لا توجد منتجات في المخزن</td>
                 </tr>
             `;
             return;
         }
 
-        const statusFilter = document.getElementById('filterStockStatus').value;
+        const statusFilter = document.getElementById('filterStockStatus');
+        const categoryFilter = document.getElementById('filterCategory');
+        const searchInput = document.getElementById('searchStock');
+
+        const statusValue = statusFilter ? statusFilter.value : 'all';
+        const categoryValue = categoryFilter ? categoryFilter.value : 'all';
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
         let filtered = stock;
         
-        if (statusFilter !== 'all') {
-            filtered = stock.filter(item => {
+        // فلتر الحالة
+        if (statusValue !== 'all') {
+            filtered = filtered.filter(item => {
                 const qty = item.quantity || 0;
                 const minStock = item.products?.min_stock || 10;
-                switch(statusFilter) {
+                switch(statusValue) {
                     case 'ok': return qty >= minStock;
                     case 'low': return qty > 0 && qty < minStock;
                     case 'out': return qty <= 0;
                     default: return true;
                 }
+            });
+        }
+
+        // فلتر الفئة
+        if (categoryValue !== 'all') {
+            filtered = filtered.filter(item => item.products?.category === categoryValue);
+        }
+
+        // فلتر البحث
+        if (searchTerm) {
+            filtered = filtered.filter(item => {
+                const product = item.products || {};
+                return (product.name || '').toLowerCase().includes(searchTerm) ||
+                       (product.code || '').toLowerCase().includes(searchTerm);
             });
         }
 
@@ -185,6 +229,7 @@ class StockReportManager {
                     <td>${product.code || '-'}</td>
                     <td>${product.category || '-'}</td>
                     <td>${qty}</td>
+                    <td>${minStock}</td>
                     <td>
                         <span class="badge bg-${statusClass}">${status}</span>
                     </td>
@@ -193,20 +238,21 @@ class StockReportManager {
         }).join('');
     }
 
+    // ============================================
+    // بحث
+    // ============================================
+
     searchStock() {
-        const searchTerm = document.getElementById('searchStock').value.toLowerCase();
-        
-        let filtered = this.currentData;
+        this.renderTable(this.currentData);
+    }
 
-        if (searchTerm) {
-            filtered = filtered.filter(item => {
-                const product = item.products || {};
-                return (product.name || '').toLowerCase().includes(searchTerm) ||
-                       (product.code || '').toLowerCase().includes(searchTerm);
-            });
-        }
+    // ============================================
+    // تحديث
+    // ============================================
 
-        this.renderTable(filtered);
+    refreshData() {
+        this.loadData();
+        showToast('تم تحديث البيانات', 'info');
     }
 }
 
@@ -229,12 +275,12 @@ function handleLogout() {
     }
 }
 
-function loadBranchStock() {
-    if (stockReportManager) stockReportManager.loadBranchStock();
-}
-
 function searchStock() {
     if (stockReportManager) stockReportManager.searchStock();
+}
+
+function refreshData() {
+    if (stockReportManager) stockReportManager.refreshData();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

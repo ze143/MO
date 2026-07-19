@@ -5,6 +5,7 @@
 class OwnerDashboard {
   constructor() {
     this.charts = {};
+    this.filters = { dateFrom: "", dateTo: "", branchId: "all" };
     this.init();
   }
 
@@ -19,6 +20,7 @@ class OwnerDashboard {
     this.updateTime();
     setInterval(() => this.updateTime(), 1000);
 
+    await this.loadFilterOptions();
     await this.loadData();
     setInterval(() => this.loadData(), 60000);
   }
@@ -33,14 +35,74 @@ class OwnerDashboard {
     document.getElementById("currentTime").textContent = timeStr;
   }
 
+  // ============================================
+  // الفلاتر
+  // ============================================
+
+  async loadFilterOptions() {
+    try {
+      const branches = await supabaseRequest(
+        "branches?select=id,name&is_active=eq.true&order=name.asc",
+      );
+      const select = document.getElementById("filterBranch");
+      select.innerHTML = '<option value="all">جميع الفروع</option>';
+      branches.forEach((branch) => {
+        const option = document.createElement("option");
+        option.value = branch.id;
+        option.textContent = branch.name;
+        select.appendChild(option);
+      });
+    } catch (error) {
+      console.error("خطأ في تحميل خيارات الفلتر:", error);
+    }
+  }
+
+  async applyFilters() {
+    showLoading();
+    try {
+      const dateFrom = document.getElementById("filterDateFrom").value;
+      const dateTo = document.getElementById("filterDateTo").value;
+      const branchId = document.getElementById("filterBranch").value;
+
+      console.log("📌 تطبيق الفلاتر:", { dateFrom, dateTo, branchId });
+
+      // حفظ الفلاتر
+      this.filters = { dateFrom, dateTo, branchId };
+
+      // إعادة تحميل البيانات مع الفلاتر
+      await this.loadData();
+      showToast("تم تطبيق الفلاتر", "success");
+    } catch (error) {
+      console.error("خطأ في تطبيق الفلاتر:", error);
+      showToast("حدث خطأ", "error");
+    } finally {
+      hideLoading();
+    }
+  }
+
+  resetFilters() {
+    document.getElementById("filterDateFrom").value = "";
+    document.getElementById("filterDateTo").value = "";
+    document.getElementById("filterBranch").value = "all";
+    this.filters = { dateFrom: "", dateTo: "", branchId: "all" };
+    this.loadData();
+    showToast("تم إعادة تعيين الفلاتر", "info");
+  }
+
+  // ============================================
+  // تحميل البيانات
+  // ============================================
+
   async loadData() {
     showLoading();
     try {
+      const { dateFrom, dateTo, branchId } = this.filters;
+
       await Promise.all([
-        this.loadStats(),
-        this.loadBranchesChart(),
-        this.loadProductsChart(),
-        this.loadRecentSales(),
+        this.loadStats(dateFrom, dateTo, branchId),
+        this.loadBranchesChart(dateFrom, dateTo, branchId),
+        this.loadProductsChart(dateFrom, dateTo, branchId),
+        this.loadRecentSales(dateFrom, dateTo, branchId),
       ]);
     } catch (error) {
       console.error("خطأ في تحميل البيانات:", error);
@@ -50,66 +112,95 @@ class OwnerDashboard {
     }
   }
 
-  async loadStats() {
+  // ============================================
+  // الإحصائيات
+  // ============================================
+
+  async loadStats(dateFrom, dateTo, branchId) {
     try {
-      // إجمالي المبيعات
-      const salesResponse = await supabaseRequest(
-        "daily_sales?select=quantity",
-      );
+      // 1. إجمالي المبيعات (مع الفلتر)
+      let salesQuery = "daily_sales?select=quantity";
+      const salesFilters = [];
+      if (dateFrom) salesFilters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) salesFilters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") salesFilters.push(`branch_id=eq.${branchId}`);
+      if (salesFilters.length > 0) salesQuery += `&${salesFilters.join("&")}`;
+
+      const salesResponse = await supabaseRequest(salesQuery);
       const totalSales = salesResponse.reduce((sum, s) => sum + s.quantity, 0);
       document.getElementById("totalSales").textContent = totalSales;
+      console.log(`📊 إجمالي المبيعات: ${totalSales}`);
 
-      // عدد الفروع
+      // 2. عدد الفروع (ثابت)
       const branchesResponse = await supabaseRequest(
         "branches?select=id&is_active=eq.true",
       );
       document.getElementById("totalBranches").textContent =
         branchesResponse.length;
 
-      // عدد المنتجات
+      // 3. عدد المنتجات (ثابت)
       const productsResponse = await supabaseRequest(
         "products?select=id&is_active=eq.true",
       );
       document.getElementById("totalProducts").textContent =
         productsResponse.length;
 
-      // مبيعات اليوم
+      // 4. ✅ مبيعات اليوم (مع فلتر الفرع)
       const today = new Date().toISOString().split("T")[0];
-      const todaySalesResponse = await supabaseRequest(
-        `daily_sales?select=quantity&sale_date=eq.${today}`,
-      );
+      let todayQuery = `daily_sales?select=quantity&sale_date=eq.${today}`;
+
+      // ✅ تطبيق فلتر الفرع على مبيعات اليوم
+      if (branchId && branchId !== "all") {
+        todayQuery += `&branch_id=eq.${branchId}`;
+      }
+
+      const todaySalesResponse = await supabaseRequest(todayQuery);
       const todaySales = todaySalesResponse.reduce(
         (sum, s) => sum + s.quantity,
         0,
       );
       document.getElementById("todaySales").textContent = todaySales;
+      console.log(`📊 مبيعات اليوم (${today}): ${todaySales}`);
     } catch (error) {
       console.error("خطأ في تحميل الإحصائيات:", error);
+      showToast("حدث خطأ في تحميل الإحصائيات", "error");
     }
   }
 
-  async loadBranchesChart() {
-    try {
-      // 1. جلب المبيعات
-      const sales = await supabaseRequest(
-        "daily_sales?select=branch_id,quantity",
-      );
+  // ============================================
+  // مخطط الفروع
+  // ============================================
 
-      // 2. جلب أسماء الفروع
+  async loadBranchesChart(dateFrom, dateTo, branchId) {
+    try {
+      let query = "daily_sales?select=branch_id,quantity";
+      const filters = [];
+
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+
+      if (filters.length > 0) {
+        query += `&${filters.join("&")}`;
+      }
+
+      const sales = await supabaseRequest(query);
+
+      // جلب أسماء الفروع
       const branchIds = [
         ...new Set(sales.map((s) => s.branch_id).filter((id) => id)),
       ];
       let branchMap = {};
       if (branchIds.length > 0) {
-        const branchQuery = branchIds.map((id) => `id=eq.${id}`).join("&");
+        const branchQuery = branchIds.map((id) => `id.eq.${id}`).join(",");
         const branches = await supabaseRequest(
-          `branches?select=id,name&${branchQuery}`,
+          `branches?select=id,name&or=(${branchQuery})`,
         );
-        branchMap = {};
-        branches.forEach((b) => (branchMap[b.id] = b));
+        for (const b of branches) {
+          branchMap[b.id] = b;
+        }
       }
 
-      // 3. دمج البيانات
       const branchSales = {};
       sales.forEach((item) => {
         const name = branchMap[item.branch_id]?.name || "غير معروف";
@@ -164,28 +255,40 @@ class OwnerDashboard {
     }
   }
 
-  async loadProductsChart() {
-    try {
-      // 1. جلب المبيعات
-      const sales = await supabaseRequest(
-        "daily_sales?select=product_id,quantity",
-      );
+  // ============================================
+  // مخطط المنتجات
+  // ============================================
 
-      // 2. جلب أسماء المنتجات
+  async loadProductsChart(dateFrom, dateTo, branchId) {
+    try {
+      let query = "daily_sales?select=product_id,quantity";
+      const filters = [];
+
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+
+      if (filters.length > 0) {
+        query += `&${filters.join("&")}`;
+      }
+
+      const sales = await supabaseRequest(query);
+
+      // جلب أسماء المنتجات
       const productIds = [
         ...new Set(sales.map((s) => s.product_id).filter((id) => id)),
       ];
       let productMap = {};
       if (productIds.length > 0) {
-        const productQuery = productIds.map((id) => `id=eq.${id}`).join("&");
+        const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
         const products = await supabaseRequest(
-          `products?select=id,name&${productQuery}`,
+          `products?select=id,name&or=(${productQuery})`,
         );
-        productMap = {};
-        products.forEach((p) => (productMap[p.id] = p));
+        for (const p of products) {
+          productMap[p.id] = p;
+        }
       }
 
-      // 3. دمج البيانات
       const productSales = {};
       sales.forEach((item) => {
         const name = productMap[item.product_id]?.name || "غير معروف";
@@ -249,42 +352,57 @@ class OwnerDashboard {
     }
   }
 
-  async loadRecentSales() {
-    try {
-      // 1. جلب المبيعات
-      const sales = await supabaseRequest(`
-            daily_sales?select=id,branch_id,product_id,quantity,sale_date,is_closed&order=created_at.desc&limit=20
-        `);
+  // ============================================
+  // آخر المبيعات
+  // ============================================
 
-      // 2. جلب أسماء الفروع
+  async loadRecentSales(dateFrom, dateTo, branchId) {
+    try {
+      let query = `
+        daily_sales?select=id,branch_id,product_id,quantity,sale_date,is_closed&order=created_at.desc&limit=20
+      `;
+      const filters = [];
+
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+
+      if (filters.length > 0) {
+        query += `&${filters.join("&")}`;
+      }
+
+      const sales = await supabaseRequest(query);
+
+      // جلب أسماء الفروع
       const branchIds = [
         ...new Set(sales.map((s) => s.branch_id).filter((id) => id)),
       ];
       let branchMap = {};
       if (branchIds.length > 0) {
-        const branchQuery = branchIds.map((id) => `id=eq.${id}`).join("&");
+        const branchQuery = branchIds.map((id) => `id.eq.${id}`).join(",");
         const branches = await supabaseRequest(
-          `branches?select=id,name&${branchQuery}`,
+          `branches?select=id,name&or=(${branchQuery})`,
         );
-        branchMap = {};
-        branches.forEach((b) => (branchMap[b.id] = b));
+        for (const b of branches) {
+          branchMap[b.id] = b;
+        }
       }
 
-      // 3. جلب أسماء المنتجات
+      // جلب أسماء المنتجات
       const productIds = [
         ...new Set(sales.map((s) => s.product_id).filter((id) => id)),
       ];
       let productMap = {};
       if (productIds.length > 0) {
-        const productQuery = productIds.map((id) => `id=eq.${id}`).join("&");
+        const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
         const products = await supabaseRequest(
-          `products?select=id,name&${productQuery}`,
+          `products?select=id,name&or=(${productQuery})`,
         );
-        productMap = {};
-        products.forEach((p) => (productMap[p.id] = p));
+        for (const p of products) {
+          productMap[p.id] = p;
+        }
       }
 
-      // 4. دمج البيانات
       const salesWithNames = sales.map((sale) => ({
         ...sale,
         branch_name: branchMap[sale.branch_id]?.name || "غير معروف",
@@ -294,10 +412,10 @@ class OwnerDashboard {
       const tbody = document.getElementById("recentSalesTable");
       if (salesWithNames.length === 0) {
         tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted">لا توجد مبيعات مسجلة</td>
-                </tr>
-            `;
+          <tr>
+            <td colspan="6" class="text-center text-muted">لا توجد مبيعات مسجلة</td>
+          </tr>
+        `;
         return;
       }
 
@@ -305,18 +423,18 @@ class OwnerDashboard {
         .map(
           (sale, index) => `
             <tr>
-                <td>${index + 1}</td>
-                <td>${sale.branch_name}</td>
-                <td>${sale.product_name}</td>
-                <td>${sale.quantity}</td>
-                <td>${new Date(sale.sale_date).toLocaleDateString("ar-EG")}</td>
-                <td>
-                    <span class="badge-status ${sale.is_closed ? "closed" : "open"}">
-                        ${sale.is_closed ? "مقفلة" : "مفتوحة"}
-                    </span>
-                </td>
+              <td>${index + 1}</td>
+              <td>${sale.branch_name}</td>
+              <td>${sale.product_name}</td>
+              <td>${sale.quantity}</td>
+              <td>${new Date(sale.sale_date).toLocaleDateString("ar-EG")}</td>
+              <td>
+                <span class="badge-status ${sale.is_closed ? "closed" : "open"}">
+                  ${sale.is_closed ? "مقفلة" : "مفتوحة"}
+                </span>
+              </td>
             </tr>
-        `,
+          `,
         )
         .join("");
     } catch (error) {
@@ -340,6 +458,14 @@ function handleLogout() {
   if (confirm("هل أنت متأكد من تسجيل الخروج؟")) {
     authManager.logout();
   }
+}
+
+function applyFilters() {
+  if (window._ownerDashboard) window._ownerDashboard.applyFilters();
+}
+
+function resetFilters() {
+  if (window._ownerDashboard) window._ownerDashboard.resetFilters();
 }
 
 document.addEventListener("DOMContentLoaded", () => {

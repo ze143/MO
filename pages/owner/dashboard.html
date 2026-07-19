@@ -1,152 +1,215 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>لوحة التحكم - المالك | نظام MO</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="../../assets/css/style.css">
-</head>
-<body>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="../../assets/css/style.css" />
+  </head>
+  <body>
     <!-- شريط جانبي للمالك -->
     <nav class="sidebar" id="sidebar">
-        <div class="brand">
-            <h2>MO<span>.</span></h2>
-            <small>نظام إدارة المحلات</small>
-        </div>
-        
-        <ul class="nav flex-column mt-3">
-            <li class="nav-item">
-                <a class="nav-link active" href="dashboard.html">
-                    <i class="fas fa-chart-pie"></i> لوحة التحكم
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="branches-report.html">
-                    <i class="fas fa-store"></i> تقارير الفروع
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="sales-report.html">
-                    <i class="fas fa-chart-line"></i> تقارير المبيعات
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="stock-report.html">
-                    <i class="fas fa-boxes"></i> تقارير المخزون
-                </a>
-            </li>
-            <li class="nav-item mt-4">
-                <a class="nav-link text-danger" href="#" onclick="handleLogout()">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </a>
-            </li>
-        </ul>
+      <div class="brand">
+        <h2>MO<span>.</span></h2>
+        <small>نظام إدارة المحلات</small>
+      </div>
+
+      <ul class="nav flex-column mt-3">
+        <li class="nav-item">
+          <a class="nav-link active" href="dashboard.html">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="branches-report.html">
+            <i class="fas fa-store"></i> تقارير الفروع
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="sales-report.html">
+            <i class="fas fa-chart-line"></i> تقارير المبيعات
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="stock-report.html">
+            <i class="fas fa-boxes"></i> تقارير المخزون
+          </a>
+        </li>
+        <li class="nav-item mt-4">
+          <a class="nav-link text-danger" href="#" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+          </a>
+        </li>
+      </ul>
     </nav>
 
     <!-- تغطية للشريط الجانبي في الموبايل -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+    ></div>
 
     <!-- زر هامبرغر -->
     <button class="hamburger-btn" onclick="toggleSidebar()">
-        <i class="fas fa-bars"></i>
+      <i class="fas fa-bars"></i>
     </button>
 
     <!-- المحتوى الرئيسي -->
     <div class="main-content">
-        <!-- رأس الصفحة -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-                <h4 class="mb-1" style="color: var(--primary-color);">
-                    <i class="fas fa-chart-pie"></i> لوحة التحكم - المالك
-                </h4>
-                <small class="text-muted" id="welcomeMessage">مرحباً بك</small>
-            </div>
-            <div>
-                <span class="badge bg-secondary p-2" id="currentTime"></span>
-            </div>
+      <!-- رأس الصفحة -->
+      <div
+        class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
+      >
+        <div>
+          <h4 class="mb-1" style="color: var(--primary-color)">
+            <i class="fas fa-chart-pie"></i> لوحة التحكم - المالك
+          </h4>
+          <small class="text-muted" id="welcomeMessage">مرحباً بك</small>
         </div>
+        <div>
+          <span class="badge bg-secondary p-2" id="currentTime"></span>
+        </div>
+      </div>
 
-        <!-- بطاقات الإحصائيات -->
-        <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-tshirt"></i></div>
-                    <div class="stat-number" id="totalSales">0</div>
-                    <div class="stat-label">إجمالي المبيعات (قطعة)</div>
-                </div>
+      <!-- فلاتر -->
+      <div class="filter-section">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">من تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateFrom"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">إلى تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateTo"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">الفرع</label>
+            <select class="form-control form-control-custom" id="filterBranch">
+              <option value="all">جميع الفروع</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex gap-2 mt-4">
+              <button
+                class="btn btn-secondary-custom w-50"
+                onclick="applyFilters()"
+              >
+                <i class="fas fa-filter"></i> تطبيق
+              </button>
+              <button
+                class="btn btn-outline-secondary w-50"
+                onclick="resetFilters()"
+              >
+                <i class="fas fa-undo"></i> إعادة تعيين
+              </button>
             </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-store"></i></div>
-                    <div class="stat-number" id="totalBranches">0</div>
-                    <div class="stat-label">عدد الفروع</div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-box"></i></div>
-                    <div class="stat-number" id="totalProducts">0</div>
-                    <div class="stat-label">عدد المنتجات</div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-                    <div class="stat-number" id="todaySales">0</div>
-                    <div class="stat-label">مبيعات اليوم</div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- المخططات البيانية -->
-        <div class="row g-4">
-            <div class="col-lg-6">
-                <div class="chart-container">
-                    <h6 class="mb-3"><i class="fas fa-chart-bar"></i> مبيعات الفروع</h6>
-                    <canvas id="branchesChart"></canvas>
-                </div>
-            </div>
-            <div class="col-lg-6">
-                <div class="chart-container">
-                    <h6 class="mb-3"><i class="fas fa-chart-pie"></i> أفضل المنتجات مبيعاً</h6>
-                    <canvas id="productsChart"></canvas>
-                </div>
-            </div>
+      <!-- بطاقات الإحصائيات -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tshirt"></i></div>
+            <div class="stat-number" id="totalSales">0</div>
+            <div class="stat-label">إجمالي المبيعات (قطعة)</div>
+          </div>
         </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-store"></i></div>
+            <div class="stat-number" id="totalBranches">0</div>
+            <div class="stat-label">عدد الفروع</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-box"></i></div>
+            <div class="stat-number" id="totalProducts">0</div>
+            <div class="stat-label">عدد المنتجات</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-number" id="todaySales">0</div>
+            <div class="stat-label">مبيعات اليوم</div>
+          </div>
+        </div>
+      </div>
 
-        <!-- جدول المبيعات الأخيرة (قراءة فقط) -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <i class="fas fa-clock"></i> آخر المبيعات
-                <span class="badge bg-secondary ms-2">قراءة فقط</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-custom mb-0">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>الفرع</th>
-                                <th>المنتج</th>
-                                <th>الكمية</th>
-                                <th>التاريخ</th>
-                                <th>الحالة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentSalesTable">
-                            <tr>
-                                <td colspan="6" class="text-center text-muted">لا توجد بيانات</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <!-- المخططات البيانية -->
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3"><i class="fas fa-chart-bar"></i> مبيعات الفروع</h6>
+            <canvas id="branchesChart"></canvas>
+          </div>
         </div>
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3">
+              <i class="fas fa-chart-pie"></i> أفضل المنتجات مبيعاً
+            </h6>
+            <canvas id="productsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- جدول المبيعات الأخيرة (قراءة فقط) -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <i class="fas fa-clock"></i> آخر المبيعات
+          <span class="badge bg-secondary ms-2">قراءة فقط</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الفرع</th>
+                  <th>المنتج</th>
+                  <th>الكمية</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="recentSalesTable">
+                <tr>
+                  <td colspan="6" class="text-center text-muted">
+                    لا توجد بيانات
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts -->
@@ -154,5 +217,5 @@
     <script src="../../assets/js/config.js"></script>
     <script src="../../assets/js/auth.js"></script>
     <script src="../../assets/js/owner/dashboard.js"></script>
-</body>
+  </body>
 </html>

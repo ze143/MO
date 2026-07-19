@@ -55,49 +55,46 @@
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
             <div>
                 <h4 class="mb-1" style="color: var(--primary-color);">
-                    <i class="fas fa-boxes"></i> تقارير المخزون
+                    <i class="fas fa-boxes"></i> تقارير المخزون الرئيسي
                 </h4>
-                <small class="text-muted">عرض تقارير المخزون في المخزن الرئيسي والفروع</small>
+                <small class="text-muted">عرض تقارير المخزون في المخزن الرئيسي</small>
             </div>
+            <button class="btn btn-secondary-custom" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
         </div>
 
-        <!-- إحصائيات سريعة -->
+        <!-- ✅ إحصائيات سريعة -->
         <div class="row g-4 mb-4">
             <div class="col-md-3">
                 <div class="stat-card">
-                    <div class="stat-number" id="totalWarehouse">0</div>
-                    <div class="stat-label">مخزون المخزن الرئيسي</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalBranchesStock">0</div>
-                    <div class="stat-label">إجمالي مخزون الفروع</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalOverall">0</div>
-                    <div class="stat-label">إجمالي المخزون الكلي</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
                     <div class="stat-number" id="totalProducts">0</div>
-                    <div class="stat-label">عدد المنتجات</div>
+                    <div class="stat-label">إجمالي المنتجات</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">إجمالي القطع</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="lowStock">0</div>
+                    <div class="stat-label">منتجات منخفضة</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="outOfStock">0</div>
+                    <div class="stat-label">منتجات نفذت</div>
                 </div>
             </div>
         </div>
 
-        <!-- اختيار الفرع -->
+        <!-- ✅ فلاتر -->
         <div class="filter-section">
             <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label form-label-custom">اختر الفرع</label>
-                    <select class="form-control form-control-custom" id="stockBranch" onchange="loadBranchStock()">
-                        <option value="warehouse">المخزن الرئيسي</option>
-                    </select>
-                </div>
                 <div class="col-md-4">
                     <label class="form-label form-label-custom">بحث</label>
                     <input type="text" class="form-control form-control-custom" 
@@ -113,10 +110,16 @@
                         <option value="out">نفذ</option>
                     </select>
                 </div>
+                <div class="col-md-4">
+                    <label class="form-label form-label-custom">الفئة</label>
+                    <select class="form-control form-control-custom" id="filterCategory" onchange="searchStock()">
+                        <option value="all">جميع الفئات</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <!-- جدول المخزون -->
+        <!-- ✅ جدول المخزون -->
         <div class="card">
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -128,12 +131,13 @@
                                 <th>الكود</th>
                                 <th>الفئة</th>
                                 <th>الكمية</th>
+                                <th>الحد الأدنى</th>
                                 <th>الحالة</th>
                             </tr>
                         </thead>
                         <tbody id="stockTable">
                             <tr>
-                                <td colspan="6" class="text-center text-muted">جاري التحميل...</td>
+                                <td colspan="7" class="text-center text-muted">جاري التحميل...</td>
                             </tr>
                         </tbody>
                     </table>

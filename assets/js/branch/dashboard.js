@@ -107,13 +107,12 @@ class BranchDashboard {
         `);
 
       // 2. جلب مخزون الفرع
-      const stock = await supabaseRequest(`
+      const stockResponse = await supabaseRequest(`
             branch_stock?select=product_id,quantity&branch_id=eq.${this.branchId}
         `);
 
-      // 3. دمج البيانات
       const stockMap = {};
-      stock.forEach((item) => {
+      stockResponse.forEach((item) => {
         stockMap[item.product_id] = item.quantity;
       });
 
@@ -170,28 +169,52 @@ class BranchDashboard {
         `;
     }
   }
-
+  
   async loadBranchStock() {
     try {
+      console.log("🔄 loadBranchStock بدأت");
+
       // 1. جلب مخزون الفرع
-      const stock = await supabaseRequest(`
+      const stockResponse = await supabaseRequest(`
             branch_stock?select=product_id,quantity&branch_id=eq.${this.branchId}
         `);
+      console.log("📦 stockResponse:", stockResponse);
 
-      // 2. جلب أسماء المنتجات (باستخدام fetchWithRelations)
-      const stockWithProducts = await fetchWithRelations(stock, [
-        {
-          field: "product_id",
-          table: "products",
-          as: "products",
-          fields: ["name", "code"],
-        },
-      ]);
+      // 2. جلب أسماء المنتجات
+      const productIds = [
+        ...new Set(
+          stockResponse.map((item) => item.product_id).filter((id) => id),
+        ),
+      ];
+      console.log("📦 productIds:", productIds);
 
-      // 3. تخزين البيانات
+      let productMap = {};
+      if (productIds.length > 0) {
+        const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
+        const products = await supabaseRequest(
+          `products?select=id,name,category,size&or=(${productQuery})`,
+        );
+        console.log("📦 products from DB:", products);
+
+        for (const p of products) {
+          productMap[p.id] = p;
+        }
+        console.log("📦 productMap:", productMap);
+      }
+
+      // 3. دمج البيانات
       this.stockData = {};
-      stockWithProducts.forEach((item) => {
+      const stockWithProducts = stockResponse.map((item) => {
+        const product = productMap[item.product_id] || {
+          name: "غير معروف",
+          category: "",
+          size: "",
+        };
         this.stockData[item.product_id] = item.quantity;
+        return {
+          ...item,
+          products: product,
+        };
       });
 
       // 4. عرض في الجدول
@@ -244,24 +267,41 @@ class BranchDashboard {
       const today = new Date().toISOString().split("T")[0];
 
       // 1. جلب مبيعات اليوم
-      const sales = await supabaseRequest(`
+      const salesResponse = await supabaseRequest(`
             daily_sales?select=id,product_id,quantity&branch_id=eq.${this.branchId}&sale_date=eq.${today}&is_closed=eq.false
         `);
+      console.log("📦 salesResponse:", salesResponse);
 
       // 2. جلب أسماء المنتجات
-      const salesWithProducts = await fetchWithRelations(sales, [
-        {
-          field: "product_id",
-          table: "products",
-          as: "products",
-          fields: ["name"],
-        },
-      ]);
+      const productIds = [
+        ...new Set(
+          salesResponse.map((item) => item.product_id).filter((id) => id),
+        ),
+      ];
+      console.log("📦 productIds:", productIds);
 
-      // 3. تخزين البيانات
+      let productMap = {};
+      if (productIds.length > 0) {
+        const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
+        const products = await supabaseRequest(
+          `products?select=id,name&or=(${productQuery})`,
+        );
+        console.log("📦 products from DB:", products);
+
+        for (const p of products) {
+          productMap[p.id] = p;
+        }
+        console.log("📦 productMap:", productMap);
+      }
+
+      // 3. دمج البيانات
       this.salesData = {};
-      salesWithProducts.forEach((sale) => {
+      const salesWithProducts = salesResponse.map((sale) => {
         this.salesData[sale.product_id] = sale.quantity;
+        return {
+          ...sale,
+          products: productMap[sale.product_id] || { name: "غير معروف" },
+        };
       });
 
       // 4. عرض في الجدول
@@ -293,11 +333,11 @@ class BranchDashboard {
         )
         .join("");
 
-      const totalItems = sales.reduce((sum, s) => sum + s.quantity, 0);
+      const totalItems = salesResponse.reduce((sum, s) => sum + s.quantity, 0);
       document.getElementById("salesCount").textContent = `${totalItems} قطعة`;
 
       // تحديث حقول الإدخال
-      sales.forEach((sale) => {
+      salesResponse.forEach((sale) => {
         const input = document.getElementById(`qty_${sale.product_id}`);
         if (input) input.value = sale.quantity;
       });
