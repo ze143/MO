@@ -19,6 +19,7 @@ class BranchTransfersManager {
     );
     await this.loadData();
     await this.loadOptions();
+    await this.loadFilters();
     this.addEventListeners();
   }
 
@@ -77,14 +78,12 @@ class BranchTransfersManager {
 
       let branchMap = {};
       if (branchIds.length > 0) {
-        // ✅ استخدم or بدل &
         const branchQuery = branchIds.map((id) => `id.eq.${id}`).join(",");
         const branches = await supabaseRequest(
           `branches?select=id,name&or=(${branchQuery})`,
         );
         console.log("📦 branches from DB:", branches);
 
-        // ✅ دمج يدوي بسيط
         for (const b of branches) {
           branchMap[b.id] = b;
         }
@@ -103,14 +102,12 @@ class BranchTransfersManager {
 
       let productMap = {};
       if (productIds.length > 0) {
-        // ✅ استخدم or بدل &
         const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
         const products = await supabaseRequest(
           `products?select=id,name&or=(${productQuery})`,
         );
         console.log("📦 products from DB:", products);
 
-        // ✅ دمج يدوي بسيط
         for (const p of products) {
           productMap[p.id] = p;
         }
@@ -179,7 +176,6 @@ class BranchTransfersManager {
 
     tbody.innerHTML = transfers
       .map((movement, index) => {
-        // ✅ استخراج الأسماء
         const productName =
           movement.products?.name ||
           movement.old_product?.name ||
@@ -307,10 +303,23 @@ class BranchTransfersManager {
 
   async loadFilters() {
     try {
+      console.log("🔄 loadFilters بدأت");
+
+      // 1. تحميل الفروع للفلتر
       const branches = await supabaseRequest(
         "branches?select=id,name&is_active=eq.true&order=name.asc",
       );
+      console.log("📦 branches for filter:", branches);
+
       const branchSelect = document.getElementById("filterBranch");
+      if (!branchSelect) {
+        console.error("❌ filterBranch element not found");
+        return;
+      }
+
+      // ✅ إفراغ القائمة قبل الإضافة
+      branchSelect.innerHTML = '<option value="all">جميع الفروع</option>';
+
       branches.forEach((branch) => {
         const option = document.createElement("option");
         option.value = branch.id;
@@ -318,18 +327,32 @@ class BranchTransfersManager {
         branchSelect.appendChild(option);
       });
 
+      // 2. تحميل المنتجات للفلتر
       const products = await supabaseRequest(
         "products?select=id,name&is_active=eq.true&order=name.asc",
       );
+      console.log("📦 products for filter:", products);
+
       const productSelect = document.getElementById("filterProduct");
+      if (!productSelect) {
+        console.error("❌ filterProduct element not found");
+        return;
+      }
+
+      // ✅ إفراغ القائمة قبل الإضافة
+      productSelect.innerHTML = '<option value="all">جميع المنتجات</option>';
+
       products.forEach((product) => {
         const option = document.createElement("option");
         option.value = product.id;
         option.textContent = product.name;
         productSelect.appendChild(option);
       });
+
+      console.log("✅ loadFilters completed");
     } catch (error) {
       console.error("خطأ في تحميل الفلاتر:", error);
+      showToast("حدث خطأ في تحميل الفلاتر", "error");
     }
   }
 
@@ -367,7 +390,12 @@ class BranchTransfersManager {
         );
       }
 
+      // ✅ تحديث الجدول
       this.renderTable(filtered);
+
+      // ✅ تحديث الإحصائيات بناءً على الفلتر
+      this.updateStats(filtered);
+
       showToast("تم تطبيق الفلتر بنجاح", "success");
     } catch (error) {
       console.error("خطأ في تطبيق الفلتر:", error);
@@ -375,6 +403,50 @@ class BranchTransfersManager {
     } finally {
       hideLoading();
     }
+  }
+
+  // ✅ أضف هذه الدالة الجديدة
+  updateStats(data) {
+    const totalTransfers = data.length;
+    const totalItems = data.reduce(
+      (sum, t) => sum + (t.quantity || t.old_quantity || 0),
+      0,
+    );
+
+    // عدد الفروع من البيانات المصفاة
+    const branchIds = new Set();
+    data.forEach((t) => {
+      if (t.from_branch_id) branchIds.add(t.from_branch_id);
+      if (t.to_branch_id) branchIds.add(t.to_branch_id);
+    });
+    const branchesCount = branchIds.size;
+
+    // عدد الأيام من البيانات المصفاة
+    const days = new Set(data.map((t) => t.transfer_date));
+    const daysCount = days.size;
+
+    document.getElementById("totalTransfers").textContent = totalTransfers;
+    document.getElementById("totalItemsTransferred").textContent = totalItems;
+    document.getElementById("branchesCount").textContent =
+      branchesCount || document.getElementById("branchesCount").textContent;
+    document.getElementById("daysCount").textContent =
+      daysCount || document.getElementById("daysCount").textContent;
+  }
+
+  // ✅ عدل resetFilters
+  resetFilters() {
+    document.getElementById("filterDateFrom").value = "";
+    document.getElementById("filterDateTo").value = "";
+    document.getElementById("filterBranch").value = "all";
+    document.getElementById("filterType").value = "all";
+    document.getElementById("filterProduct").value = "all";
+
+    this.renderTable(this.allTransfers);
+
+    // ✅ إرجاع الإحصائيات الكاملة
+    this.loadStats();
+
+    showToast("تم إعادة تعيين الفلاتر", "info");
   }
 
   // ============================================
@@ -877,6 +949,11 @@ function handleLogout() {
 
 function applyFilters() {
   if (transfersManager) transfersManager.applyFilters();
+}
+
+// ✅ دالة إعادة تعيين الفلاتر
+function resetFilters() {
+  if (transfersManager) transfersManager.resetFilters();
 }
 
 function showMovementModal(type) {

@@ -162,12 +162,20 @@
             </select>
           </div>
           <div class="col-md-3">
-            <button
-              class="btn btn-secondary-custom w-100 mt-4"
-              onclick="applyFilters()"
-            >
-              <i class="fas fa-filter"></i> تطبيق الفلتر
-            </button>
+            <div class="d-flex gap-2 mt-4">
+              <button
+                class="btn btn-secondary-custom w-50"
+                onclick="applyFilters()"
+              >
+                <i class="fas fa-filter"></i> تطبيق
+              </button>
+              <button
+                class="btn btn-outline-secondary w-50"
+                onclick="resetFilters()"
+              >
+                <i class="fas fa-undo"></i> إعادة تعيين
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -18,33 +18,39 @@ class BranchFullReport {
   async loadBranchesReport() {
     showLoading();
     try {
+      // 1. جلب جميع الفروع
       const branches = await supabaseRequest(
         "branches?select=id,name,code,address,phone,manager_name,is_active&order=name.asc",
       );
+      console.log("📦 الفروع:", branches);
 
-      // جلب جميع المنتجات
+      // 2. جلب جميع المنتجات
       const products = await supabaseRequest(
         "products?select=id,name,code&is_active=eq.true&order=name.asc",
       );
       const productMap = {};
       products.forEach((p) => (productMap[p.id] = p));
 
-      // جلب مخزون الفروع
+      // 3. جلب مخزون الفروع
       const allStock = await supabaseRequest(
         "branch_stock?select=branch_id,product_id,quantity",
       );
+      console.log("📦 مخزون الفروع:", allStock);
 
-      // جلب المبيعات
+      // 4. جلب المبيعات
       const allSales = await supabaseRequest(
         "daily_sales?select=branch_id,product_id,quantity,sale_date",
       );
       const today = new Date().toISOString().split("T")[0];
 
-      const branchesData = branches.map((branch) => {
+      // 5. معالجة البيانات لكل فرع
+      this.allBranches = branches.map((branch) => {
+        // مخزون الفرع
         const branchStock = allStock.filter((s) => s.branch_id === branch.id);
         const totalStock = branchStock.reduce((sum, s) => sum + s.quantity, 0);
         const productCount = branchStock.filter((s) => s.quantity > 0).length;
 
+        // المنتجات مع الكميات
         const productsWithStock = branchStock
           .map((item) => ({
             ...item,
@@ -55,6 +61,7 @@ class BranchFullReport {
           }))
           .sort((a, b) => b.quantity - a.quantity);
 
+        // المبيعات
         const branchSales = allSales.filter((s) => s.branch_id === branch.id);
         const totalSales = branchSales.reduce((sum, s) => sum + s.quantity, 0);
         const todaySales = branchSales.filter((s) => s.sale_date === today);
@@ -66,6 +73,13 @@ class BranchFullReport {
         const status =
           totalStock === 0 ? "out" : totalStock < 20 ? "low" : "ok";
 
+        console.log(`📊 ${branch.name}:`, {
+          totalStock,
+          totalTodaySales,
+          totalSales,
+          productCount,
+        });
+
         return {
           ...branch,
           products: productsWithStock,
@@ -74,12 +88,14 @@ class BranchFullReport {
           totalSales,
           totalTodaySales,
           stockStatus: status,
+          productCountAll: products.length,
         };
       });
 
-      this.renderBranches(branchesData);
+      this.renderStats();
+      this.renderBranches(this.allBranches);
     } catch (error) {
-      console.error("خطأ في تحميل تقارير الفروع:", error);
+      console.error("خطأ في تحميل البيانات:", error);
       showToast("حدث خطأ في تحميل البيانات", "error");
     } finally {
       hideLoading();
@@ -107,7 +123,7 @@ class BranchFullReport {
   renderBranches(branches) {
     const container = document.getElementById("branchesContainer");
 
-    if (branches.length === 0) {
+    if (!branches || branches.length === 0) {
       container.innerHTML = `
             <div class="col-12 text-center text-muted py-5">
                 <i class="fas fa-store fa-3x mb-3 d-block"></i>
@@ -193,7 +209,7 @@ class BranchFullReport {
                                     return `
                                             <div class="product-item">
                                                 <span class="product-name">
-                                                    ${product.name}
+                                                    ${product.product?.name || "غير معروف"}
                                                     <span class="badge ${statusClass} ms-2">${status}</span>
                                                 </span>
                                                 <span class="product-qty">${product.quantity}</span>
