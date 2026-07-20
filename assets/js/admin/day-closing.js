@@ -81,47 +81,62 @@ class DayClosingManager {
       const salesResponse = await supabaseRequest(`
             daily_sales?select=id,product_id,quantity&branch_id=eq.${branchId}&sale_date=eq.${closingDate}&is_closed=eq.false
         `);
-      console.log("📦 salesResponse:", salesResponse);
+      console.log("📦 salesResponse (raw):", salesResponse);
 
-      // 3. جلب أسماء المنتجات
-      const productIds = [
-        ...new Set(
-          salesResponse.map((item) => item.product_id).filter((id) => id),
-        ),
-      ];
-      console.log("📦 productIds:", productIds);
+      // ✅ 3. تجميع الكميات حسب المنتج
+      const productTotals = {};
+      salesResponse.forEach((sale) => {
+        if (productTotals[sale.product_id]) {
+          productTotals[sale.product_id] += sale.quantity;
+        } else {
+          productTotals[sale.product_id] = sale.quantity;
+        }
+      });
+      console.log("📦 productTotals (مجمع):", productTotals);
 
+      // ✅ 4. تحويل الكائن إلى مصفوفة
+      const groupedSales = Object.keys(productTotals).map((productId) => {
+        return {
+          product_id: productId,
+          quantity: productTotals[productId],
+          // ناخد أول ID عشان نعرف نحذف لو احتاجنا
+          ids: salesResponse
+            .filter((s) => s.product_id === productId)
+            .map((s) => s.id),
+        };
+      });
+      console.log("📦 groupedSales (مصفوفة):", groupedSales);
+
+      // 5. جلب أسماء المنتجات
+      const productIds = Object.keys(productTotals);
       let productMap = {};
       if (productIds.length > 0) {
-        // ✅ استخدم or بدل &
         const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
         const products = await supabaseRequest(
           `products?select=id,name&or=(${productQuery})`,
         );
-        console.log("📦 products from DB:", products);
-
         for (const p of products) {
           productMap[p.id] = p;
         }
-        console.log("📦 productMap:", productMap);
       }
 
-      // 4. دمج البيانات
-      const salesWithProducts = salesResponse.map((sale) => {
+      // 6. دمج البيانات
+      const salesWithProducts = groupedSales.map((sale) => {
         const product = productMap[sale.product_id] || { name: "غير معروف" };
         return {
           ...sale,
           products: product,
+          // نحتفظ بأول ID للحذف
+          id: sale.ids[0] || "grouped",
         };
       });
 
       this.currentSales = salesWithProducts;
-      console.log("📦 this.currentSales:", this.currentSales);
+      console.log("📦 this.currentSales (نهائي):", this.currentSales);
 
       const previewDiv = document.getElementById("salesPreview");
       const tbody = document.getElementById("salesPreviewTable");
 
-      // ✅ خليه يظهر دايماً
       previewDiv.style.display = "block";
 
       if (salesWithProducts.length === 0) {
@@ -200,6 +215,7 @@ class DayClosingManager {
     showLoading();
 
     try {
+      // استدعاء دالة إقفال اليوم
       await supabaseRequest("rpc/close_day", {
         method: "POST",
         body: JSON.stringify({

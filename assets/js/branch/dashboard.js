@@ -131,8 +131,11 @@ class BranchDashboard {
           const stock = stockMap[product.id] || 0;
           const currentQty = this.salesData[product.id] || 0;
 
+          // ✅ لو المخزون صفر، خلي الحقل disabled
+          const isDisabled = stock === 0;
+
           return `
-                <div class="product-item">
+                <div class="product-item ${isDisabled ? "opacity-50" : ""}">
                     <div class="product-info">
                         <span class="product-name">${product.name}</span>
                         <span class="product-details">
@@ -140,10 +143,11 @@ class BranchDashboard {
                             ${product.size ? `| مقاس: ${product.size}` : ""}
                             ${product.color ? `| لون: ${product.color}` : ""}
                             <span class="product-stock ms-2">المخزون: ${stock}</span>
+                            ${isDisabled ? '<span class="badge bg-danger ms-2">غير متوفر</span>' : ""}
                         </span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="decreaseQty('${product.id}')">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="decreaseQty('${product.id}')" ${isDisabled ? "disabled" : ""}>
                             <i class="fas fa-minus"></i>
                         </button>
                         <input type="number" class="product-input" 
@@ -151,8 +155,9 @@ class BranchDashboard {
                                value="${currentQty}"
                                min="0"
                                max="${stock}"
+                               ${isDisabled ? "disabled" : ""}
                                onchange="updateQty('${product.id}', this.value)">
-                        <button class="btn btn-sm btn-outline-secondary" onclick="increaseQty('${product.id}')">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="increaseQty('${product.id}')" ${isDisabled ? "disabled" : ""}>
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
@@ -169,7 +174,7 @@ class BranchDashboard {
         `;
     }
   }
-  
+
   async loadBranchStock() {
     try {
       console.log("🔄 loadBranchStock بدأت");
@@ -404,79 +409,92 @@ class BranchDashboard {
 
       // التحقق من حالة الإقفال
       const closingCheck = await supabaseRequest(`
-                day_closing?select=id&branch_id=eq.${this.branchId}&closing_date=eq.${today}
-            `);
+            day_closing?select=id&branch_id=eq.${this.branchId}&closing_date=eq.${today}
+        `);
 
       if (closingCheck.length > 0) {
         showToast("تم إقفال اليوم، لا يمكن إضافة مبيعات جديدة", "error");
         return;
       }
 
+      // ✅ جلب المخزون الحالي للفرع
+      const stockResponse = await supabaseRequest(`
+            branch_stock?select=product_id,quantity&branch_id=eq.${this.branchId}
+        `);
+
+      const stockMap = {};
+      stockResponse.forEach((item) => {
+        stockMap[item.product_id] = item.quantity;
+      });
+      console.log("📦 المخزون الحالي:", stockMap);
+
       // جمع البيانات من الحقول
       const products = document.querySelectorAll(".product-item");
-      const salesToSave = [];
+      let hasSales = false;
+      let errors = [];
 
-      products.forEach((product) => {
+      for (const product of products) {
         const input = product.querySelector(".product-input");
         if (input) {
           const productId = input.id.replace("qty_", "");
           const quantity = parseInt(input.value) || 0;
 
-          // جلب الكمية المسجلة مسبقاً
-          const existingQty = this.salesData[productId] || 0;
+          if (quantity > 0) {
+            // ✅ التحقق من توفر المنتج في المخزون
+            const availableQty = stockMap[productId] || 0;
 
-          if (quantity > 0 && quantity !== existingQty) {
-            salesToSave.push({
-              product_id: productId,
-              quantity: quantity,
-              branch_id: this.branchId,
-              sale_date: today,
+            if (availableQty === 0) {
+              const productName =
+                product.querySelector(".product-name")?.textContent ||
+                productId;
+              errors.push(`❌ المنتج "${productName}" غير متوفر في المخزون`);
+              continue;
+            }
+
+            if (quantity > availableQty) {
+              const productName =
+                product.querySelector(".product-name")?.textContent ||
+                productId;
+              errors.push(
+                `❌ المنتج "${productName}" غير كافي (المتاح: ${availableQty})`,
+              );
+              continue;
+            }
+
+            // ✅ إضافة المبيعات
+            await supabaseRequest("daily_sales", {
+              method: "POST",
+              body: JSON.stringify({
+                product_id: productId,
+                quantity: quantity,
+                branch_id: this.branchId,
+                sale_date: today,
+                is_closed: false,
+              }),
             });
+            hasSales = true;
+            console.log(`✅ تم إضافة ${quantity} من المنتج ${productId}`);
           }
-        }
-      });
-
-      if (salesToSave.length === 0) {
-        // التحقق من وجود مبيعات مسجلة بالفعل
-        const existingSales = await supabaseRequest(`
-                    daily_sales?select=id&branch_id=eq.${this.branchId}&sale_date=eq.${today}
-                `);
-
-        if (existingSales.length > 0) {
-          showToast("لا توجد تغييرات جديدة لحفظها", "info");
-          return;
-        } else {
-          showToast("يرجى إدخال كميات المبيعات", "warning");
-          return;
         }
       }
 
-      showLoading();
+      // ✅ عرض الأخطاء
+      if (errors.length > 0) {
+        showToast(errors.join("\n"), "error");
+      }
 
-      // حذف المبيعات القديمة (غير المقفلة) لهذا اليوم
-      await supabaseRequest(
-        `daily_sales?branch_id=eq.${this.branchId}&sale_date=eq.${today}&is_closed=eq.false`,
-        { method: "DELETE" },
-      );
+      if (!hasSales && errors.length === 0) {
+        showToast("لا توجد مبيعات لحفظها", "warning");
+        return;
+      }
 
-      // إضافة المبيعات الجديدة (ملاحظة: لا يتم خصم المخزون هنا)
-      const requests = salesToSave.map((sale) =>
-        supabaseRequest("daily_sales", {
-          method: "POST",
-          body: JSON.stringify(sale),
-        }),
-      );
-
-      await Promise.all(requests);
-
-      showToast(`تم حفظ ${salesToSave.length} منتج بنجاح`, "success");
+      if (hasSales) {
+        showToast("✅ تم حفظ المبيعات بنجاح", "success");
+      }
 
       // إعادة تحميل البيانات
       await this.loadTodaySales();
       await this.loadStats();
-
-      // تحديث المنتجات لعرض الكميات الجديدة
-      await this.loadProducts();
     } catch (error) {
       console.error("خطأ في حفظ المبيعات:", error);
       showToast("حدث خطأ في حفظ المبيعات", "error");
