@@ -86,6 +86,89 @@
         </div>
       </div>
 
+      <!-- بطاقات الإحصائيات -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-tshirt"></i></div>
+            <div class="stat-number" id="totalSales">0</div>
+            <div class="stat-label">إجمالي المبيعات (قطعة)</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-store"></i></div>
+            <div class="stat-number" id="totalBranches">0</div>
+            <div class="stat-label">عدد الفروع</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-box"></i></div>
+            <div class="stat-number" id="totalProducts">0</div>
+            <div class="stat-label">عدد المنتجات</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-number" id="todaySales">0</div>
+            <div class="stat-label">مبيعات اليوم</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- المخططات -->
+      <div class="row g-4">
+        <!-- الصف الأول: كاردين جنب بعض -->
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3"><i class="fas fa-chart-bar"></i> مبيعات الفروع</h6>
+            <canvas id="branchesChart"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3">
+              <i class="fas fa-chart-pie"></i> أفضل المنتجات مبيعاً
+            </h6>
+            <canvas id="productsChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- الصف الثاني: كاردين جنب بعض -->
+      <div class="row g-4 mt-2">
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3">
+              <i class="fas fa-chart-line"></i> اتجاه المبيعات اليومية
+            </h6>
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="chart-container">
+            <h6 class="mb-3">
+              <i class="fas fa-chart-pie"></i> توزيع المبيعات حسب الفئة
+            </h6>
+            <canvas id="categoryChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- الصف الثالث: كارد واحد كبير -->
+      <div class="row g-4 mt-2">
+        <div class="col-lg-12">
+          <div class="chart-container">
+            <h6 class="mb-3">
+              <i class="fas fa-trophy"></i> ترتيب الفروع حسب المبيعات
+            </h6>
+            <canvas id="rankingChart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- فلاتر -->
       <div class="filter-section">
         <div class="row g-3">
@@ -130,52 +213,30 @@
         </div>
       </div>
 
-      <!-- بطاقات الإحصائيات -->
-      <div class="row g-4 mb-4">
-        <div class="col-lg-3 col-md-6">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-tshirt"></i></div>
-            <div class="stat-number" id="totalSales">0</div>
-            <div class="stat-label">إجمالي المبيعات (قطعة)</div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-store"></i></div>
-            <div class="stat-number" id="totalBranches">0</div>
-            <div class="stat-label">عدد الفروع</div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-box"></i></div>
-            <div class="stat-number" id="totalProducts">0</div>
-            <div class="stat-label">عدد المنتجات</div>
-          </div>
-        </div>
-        <div class="col-lg-3 col-md-6">
-          <div class="stat-card">
-            <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
-            <div class="stat-number" id="todaySales">0</div>
-            <div class="stat-label">مبيعات اليوم</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- المخططات البيانية -->
-      <div class="row g-4">
-        <div class="col-lg-6">
-          <div class="chart-container">
-            <h6 class="mb-3"><i class="fas fa-chart-bar"></i> مبيعات الفروع</h6>
-            <canvas id="branchesChart"></canvas>
-          </div>
-        </div>
-        <div class="col-lg-6">
-          <div class="chart-container">
-            <h6 class="mb-3">
-              <i class="fas fa-chart-pie"></i> أفضل المنتجات مبيعاً
-            </h6>
-            <canvas id="productsChart"></canvas>
+      <!-- جدول المبيعات الأخيرة -->
+      <div class="card mt-4">
+        <div class="card-header"><i class="fas fa-clock"></i> آخر المبيعات</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-custom mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>الفرع</th>
+                  <th>المنتج</th>
+                  <th>الكمية</th>
+                  <th>التاريخ</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="recentSalesTable">
+                <tr>
+                  <td colspan="6" class="text-center text-muted">
+                    لا توجد بيانات
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

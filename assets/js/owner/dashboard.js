@@ -64,12 +64,7 @@ class OwnerDashboard {
       const dateTo = document.getElementById("filterDateTo").value;
       const branchId = document.getElementById("filterBranch").value;
 
-      console.log("📌 تطبيق الفلاتر:", { dateFrom, dateTo, branchId });
-
-      // حفظ الفلاتر
       this.filters = { dateFrom, dateTo, branchId };
-
-      // إعادة تحميل البيانات مع الفلاتر
       await this.loadData();
       showToast("تم تطبيق الفلاتر", "success");
     } catch (error) {
@@ -103,6 +98,9 @@ class OwnerDashboard {
         this.loadBranchesChart(dateFrom, dateTo, branchId),
         this.loadProductsChart(dateFrom, dateTo, branchId),
         this.loadRecentSales(dateFrom, dateTo, branchId),
+        this.loadTrendChart(dateFrom, dateTo, branchId),
+        this.loadCategoryChart(dateFrom, dateTo, branchId),
+        this.loadRankingChart(dateFrom, dateTo, branchId),
       ]);
     } catch (error) {
       console.error("خطأ في تحميل البيانات:", error);
@@ -118,7 +116,6 @@ class OwnerDashboard {
 
   async loadStats(dateFrom, dateTo, branchId) {
     try {
-      // 1. إجمالي المبيعات (مع الفلتر)
       let salesQuery = "daily_sales?select=quantity";
       const salesFilters = [];
       if (dateFrom) salesFilters.push(`sale_date=gte.${dateFrom}`);
@@ -129,30 +126,22 @@ class OwnerDashboard {
       const salesResponse = await supabaseRequest(salesQuery);
       const totalSales = salesResponse.reduce((sum, s) => sum + s.quantity, 0);
       document.getElementById("totalSales").textContent = totalSales;
-      console.log(`📊 إجمالي المبيعات: ${totalSales}`);
 
-      // 2. عدد الفروع (ثابت)
       const branchesResponse = await supabaseRequest(
         "branches?select=id&is_active=eq.true",
       );
       document.getElementById("totalBranches").textContent =
         branchesResponse.length;
 
-      // 3. عدد المنتجات (ثابت)
       const productsResponse = await supabaseRequest(
         "products?select=id&is_active=eq.true",
       );
       document.getElementById("totalProducts").textContent =
         productsResponse.length;
 
-      // 4. ✅ مبيعات اليوم (مع فلتر الفرع)
       const today = new Date().toISOString().split("T")[0];
       let todayQuery = `daily_sales?select=quantity&sale_date=eq.${today}`;
-
-      // ✅ تطبيق فلتر الفرع على مبيعات اليوم
-      if (branchId && branchId !== "all") {
-        todayQuery += `&branch_id=eq.${branchId}`;
-      }
+      if (branchId !== "all") todayQuery += `&branch_id=eq.${branchId}`;
 
       const todaySalesResponse = await supabaseRequest(todayQuery);
       const todaySales = todaySalesResponse.reduce(
@@ -160,10 +149,8 @@ class OwnerDashboard {
         0,
       );
       document.getElementById("todaySales").textContent = todaySales;
-      console.log(`📊 مبيعات اليوم (${today}): ${todaySales}`);
     } catch (error) {
       console.error("خطأ في تحميل الإحصائيات:", error);
-      showToast("حدث خطأ في تحميل الإحصائيات", "error");
     }
   }
 
@@ -175,18 +162,13 @@ class OwnerDashboard {
     try {
       let query = "daily_sales?select=branch_id,quantity";
       const filters = [];
-
       if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
       if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
       if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
-
-      if (filters.length > 0) {
-        query += `&${filters.join("&")}`;
-      }
+      if (filters.length > 0) query += `&${filters.join("&")}`;
 
       const sales = await supabaseRequest(query);
 
-      // جلب أسماء الفروع
       const branchIds = [
         ...new Set(sales.map((s) => s.branch_id).filter((id) => id)),
       ];
@@ -235,18 +217,9 @@ class OwnerDashboard {
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: {
-              display: false,
-            },
-          },
+          plugins: { legend: { display: false } },
           scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                stepSize: 1,
-              },
-            },
+            y: { beginAtZero: true, ticks: { stepSize: 1 } },
           },
         },
       });
@@ -263,18 +236,13 @@ class OwnerDashboard {
     try {
       let query = "daily_sales?select=product_id,quantity";
       const filters = [];
-
       if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
       if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
       if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
-
-      if (filters.length > 0) {
-        query += `&${filters.join("&")}`;
-      }
+      if (filters.length > 0) query += `&${filters.join("&")}`;
 
       const sales = await supabaseRequest(query);
 
-      // جلب أسماء المنتجات
       const productIds = [
         ...new Set(sales.map((s) => s.product_id).filter((id) => id)),
       ];
@@ -298,7 +266,6 @@ class OwnerDashboard {
       const sorted = Object.entries(productSales)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
-
       const labels = sorted.map((item) => item[0]);
       const data = sorted.map((item) => item[1]);
 
@@ -336,14 +303,7 @@ class OwnerDashboard {
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                font: {
-                  size: 12,
-                },
-              },
-            },
+            legend: { position: "bottom", labels: { font: { size: 12 } } },
           },
         },
       });
@@ -358,22 +318,15 @@ class OwnerDashboard {
 
   async loadRecentSales(dateFrom, dateTo, branchId) {
     try {
-      let query = `
-        daily_sales?select=id,branch_id,product_id,quantity,sale_date,is_closed&order=created_at.desc&limit=20
-      `;
+      let query = `daily_sales?select=id,branch_id,product_id,quantity,sale_date,is_closed&order=created_at.desc&limit=20`;
       const filters = [];
-
       if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
       if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
       if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
-
-      if (filters.length > 0) {
-        query += `&${filters.join("&")}`;
-      }
+      if (filters.length > 0) query += `&${filters.join("&")}`;
 
       const sales = await supabaseRequest(query);
 
-      // جلب أسماء الفروع
       const branchIds = [
         ...new Set(sales.map((s) => s.branch_id).filter((id) => id)),
       ];
@@ -388,7 +341,6 @@ class OwnerDashboard {
         }
       }
 
-      // جلب أسماء المنتجات
       const productIds = [
         ...new Set(sales.map((s) => s.product_id).filter((id) => id)),
       ];
@@ -411,34 +363,318 @@ class OwnerDashboard {
 
       const tbody = document.getElementById("recentSalesTable");
       if (salesWithNames.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="6" class="text-center text-muted">لا توجد مبيعات مسجلة</td>
-          </tr>
-        `;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">لا توجد مبيعات مسجلة</td></tr>`;
         return;
       }
 
       tbody.innerHTML = salesWithNames
         .map(
           (sale, index) => `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${sale.branch_name}</td>
-              <td>${sale.product_name}</td>
-              <td>${sale.quantity}</td>
-              <td>${new Date(sale.sale_date).toLocaleDateString("ar-EG")}</td>
-              <td>
-                <span class="badge-status ${sale.is_closed ? "closed" : "open"}">
-                  ${sale.is_closed ? "مقفلة" : "مفتوحة"}
-                </span>
-              </td>
-            </tr>
-          `,
+        <tr>
+          <td>${index + 1}</td>
+          <td>${sale.branch_name}</td>
+          <td>${sale.product_name}</td>
+          <td>${sale.quantity}</td>
+          <td>${new Date(sale.sale_date).toLocaleDateString("ar-EG")}</td>
+          <td>
+            <span class="badge-status ${sale.is_closed ? "closed" : "open"}">
+              ${sale.is_closed ? "مقفلة" : "مفتوحة"}
+            </span>
+          </td>
+        </tr>
+      `,
         )
         .join("");
     } catch (error) {
       console.error("خطأ في تحميل المبيعات الأخيرة:", error);
+    }
+  }
+
+  // ============================================
+  // مخطط اتجاه المبيعات اليومية
+  // ============================================
+
+  async loadTrendChart(dateFrom, dateTo, branchId) {
+    try {
+      let query = "daily_sales?select=sale_date,quantity";
+      const filters = [];
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+      if (filters.length > 0) query += `&${filters.join("&")}`;
+
+      const sales = await supabaseRequest(query);
+
+      const dailySales = {};
+      sales.forEach((s) => {
+        dailySales[s.sale_date] = (dailySales[s.sale_date] || 0) + s.quantity;
+      });
+
+      const sortedDates = Object.keys(dailySales).sort();
+      const labels = sortedDates.map((d) =>
+        new Date(d).toLocaleDateString("ar-EG"),
+      );
+      const data = sortedDates.map((d) => dailySales[d]);
+
+      if (this.charts.trend) {
+        this.charts.trend.destroy();
+        this.charts.trend = null;
+      }
+
+      const ctx = document.getElementById("trendChart")?.getContext("2d");
+      if (!ctx) return;
+
+      const avg =
+        data.length > 0
+          ? Math.round(data.reduce((a, b) => a + b, 0) / data.length)
+          : 0;
+
+      this.charts.trend = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "المبيعات اليومية",
+              data: data,
+              borderColor: "#D4A574",
+              backgroundColor: "rgba(212, 165, 116, 0.1)",
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: "#8B1A1A",
+              pointBorderColor: "#D4A574",
+              pointRadius: 4,
+              pointHoverRadius: 6,
+            },
+            {
+              label: `المتوسط (${avg})`,
+              data: Array(labels.length).fill(avg),
+              borderColor: "#8B1A1A",
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0,
+              borderWidth: 2,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { position: "bottom", labels: { font: { size: 12 } } },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `${context.dataset.label}: ${context.parsed.y} قطعة`;
+                },
+              },
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 },
+              title: { display: true, text: "عدد القطع" },
+            },
+            x: { title: { display: true, text: "التاريخ" } },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("خطأ في تحميل مخطط الاتجاه:", error);
+    }
+  }
+
+  // ============================================
+  // مخطط توزيع المبيعات حسب الفئة
+  // ============================================
+
+  async loadCategoryChart(dateFrom, dateTo, branchId) {
+    try {
+      let query = "daily_sales?select=product_id,quantity";
+      const filters = [];
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+      if (filters.length > 0) query += `&${filters.join("&")}`;
+
+      const sales = await supabaseRequest(query);
+
+      const productIds = [
+        ...new Set(sales.map((s) => s.product_id).filter((id) => id)),
+      ];
+      let categoryMap = {};
+      if (productIds.length > 0) {
+        const productQuery = productIds.map((id) => `id.eq.${id}`).join(",");
+        const products = await supabaseRequest(
+          `products?select=id,category&or=(${productQuery})`,
+        );
+        products.forEach((p) => {
+          categoryMap[p.id] = p.category || "غير مصنف";
+        });
+      }
+
+      const categorySales = {};
+      sales.forEach((s) => {
+        const cat = categoryMap[s.product_id] || "غير مصنف";
+        categorySales[cat] = (categorySales[cat] || 0) + s.quantity;
+      });
+
+      const labels = Object.keys(categorySales);
+      const data = Object.values(categorySales);
+      const colors = [
+        "#D4A574",
+        "#8B1A1A",
+        "#C49A6A",
+        "#5C1212",
+        "#E8C9A0",
+        "#6B2D2D",
+        "#D4B896",
+        "#4A1A1A",
+      ];
+
+      if (this.charts.category) {
+        this.charts.category.destroy();
+        this.charts.category = null;
+      }
+
+      const ctx = document.getElementById("categoryChart")?.getContext("2d");
+      if (!ctx) return;
+
+      this.charts.category = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              data: data,
+              backgroundColor: colors.slice(0, labels.length),
+              borderWidth: 2,
+              borderColor: "#fff",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { font: { size: 12 }, padding: 15 },
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = ((context.parsed / total) * 100).toFixed(
+                    1,
+                  );
+                  return `${context.label}: ${context.parsed} قطعة (${percentage}%)`;
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("خطأ في تحميل مخطط الفئات:", error);
+    }
+  }
+
+  // ============================================
+  // مخطط ترتيب الفروع
+  // ============================================
+
+  async loadRankingChart(dateFrom, dateTo, branchId) {
+    try {
+      let query = "daily_sales?select=branch_id,quantity";
+      const filters = [];
+      if (dateFrom) filters.push(`sale_date=gte.${dateFrom}`);
+      if (dateTo) filters.push(`sale_date=lte.${dateTo}`);
+      if (branchId !== "all") filters.push(`branch_id=eq.${branchId}`);
+      if (filters.length > 0) query += `&${filters.join("&")}`;
+
+      const sales = await supabaseRequest(query);
+
+      const branchIds = [
+        ...new Set(sales.map((s) => s.branch_id).filter((id) => id)),
+      ];
+      let branchMap = {};
+      if (branchIds.length > 0) {
+        const branchQuery = branchIds.map((id) => `id.eq.${id}`).join(",");
+        const branches = await supabaseRequest(
+          `branches?select=id,name&or=(${branchQuery})`,
+        );
+        branches.forEach((b) => {
+          branchMap[b.id] = b.name;
+        });
+      }
+
+      const branchSales = {};
+      sales.forEach((s) => {
+        const name = branchMap[s.branch_id] || "غير معروف";
+        branchSales[name] = (branchSales[name] || 0) + s.quantity;
+      });
+
+      const sorted = Object.entries(branchSales).sort((a, b) => b[1] - a[1]);
+      const labels = sorted.map((item) => item[0]);
+      const data = sorted.map((item) => item[1]);
+      const colors = data.map((val, i) => {
+        if (i === 0) return "#D4A574";
+        if (i === 1) return "#8B1A1A";
+        if (i === 2) return "#C49A6A";
+        return "#6B2D2D";
+      });
+
+      if (this.charts.ranking) {
+        this.charts.ranking.destroy();
+        this.charts.ranking = null;
+      }
+
+      const ctx = document.getElementById("rankingChart")?.getContext("2d");
+      if (!ctx) return;
+
+      this.charts.ranking = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "المبيعات (قطعة)",
+              data: data,
+              backgroundColor: colors,
+              borderColor: colors.map((c) => c),
+              borderWidth: 2,
+              borderRadius: 8,
+            },
+          ],
+        },
+        options: {
+          indexAxis: "y",
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return `${context.parsed.x} قطعة`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: { stepSize: 1 },
+              title: { display: true, text: "عدد القطع" },
+            },
+            y: { title: { display: true, text: "الفرع" } },
+          },
+        },
+      });
+    } catch (error) {
+      console.error("خطأ في تحميل مخطط الترتيب:", error);
     }
   }
 }
