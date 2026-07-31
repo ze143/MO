@@ -107,7 +107,8 @@ class BranchDashboard {
         `);
 
       // 2. جلب مخزون الفرع
-      const stockResponse = await supabaseRequest(`
+      const stockResponse = await supabaseRequest(`            ${product.category || ''} 
+
             branch_stock?select=product_id,quantity&branch_id=eq.${this.branchId}
         `);
 

@@ -37,32 +37,40 @@ class StockReportManager {
 
     async loadStats() {
         try {
-            // جلب جميع المنتجات والمخزون
+            // 1. جلب جميع المنتجات النشطة
+            const allProducts = await supabaseRequest('products?select=id,min_stock&is_active=eq.true');
+            const totalProducts = allProducts.length;
+            
+            // 2. جلب المخزون
             const stock = await supabaseRequest('warehouse_stock?select=product_id,quantity');
-            const products = await supabaseRequest('products?select=id,min_stock&is_active=eq.true');
-
-            // إجمالي المنتجات
-            const totalProductsEl = document.getElementById('totalProducts');
-            if (totalProductsEl) totalProductsEl.textContent = products.length;
-
-            // إجمالي القطع
-            const totalItems = stock.reduce((sum, s) => sum + s.quantity, 0);
-            const totalItemsEl = document.getElementById('totalItems');
-            if (totalItemsEl) totalItemsEl.textContent = totalItems;
-
-            // المنتجات المنخفضة
-            const lowStock = stock.filter(item => {
-                const product = products.find(p => p.id === item.product_id);
-                const minStock = product?.min_stock || 10;
-                return item.quantity > 0 && item.quantity < minStock;
+            const stockMap = {};
+            stock.forEach(item => {
+                stockMap[item.product_id] = item.quantity;
             });
-            const lowStockEl = document.getElementById('lowStock');
-            if (lowStockEl) lowStockEl.textContent = lowStock.length;
-
-            // المنتجات النافذة
-            const outOfStock = stock.filter(item => item.quantity <= 0);
-            const outOfStockEl = document.getElementById('outOfStock');
-            if (outOfStockEl) outOfStockEl.textContent = outOfStock.length;
+            
+            // 3. حساب الإحصائيات
+            let totalItems = 0;
+            let lowStockCount = 0;
+            let outOfStockCount = 0;
+            
+            allProducts.forEach(product => {
+                const qty = stockMap[product.id] || 0;
+                const minStock = product.min_stock || 10;
+                
+                totalItems += qty;
+                
+                if (qty <= 0) {
+                    outOfStockCount++;
+                } else if (qty < minStock) {
+                    lowStockCount++;
+                }
+            });
+            
+            // 4. عرض في الواجهة
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('lowStock').textContent = lowStockCount;
+            document.getElementById('outOfStock').textContent = outOfStockCount;
 
         } catch (error) {
             console.error('خطأ في تحميل الإحصائيات:', error);
@@ -75,37 +83,42 @@ class StockReportManager {
 
     async loadWarehouseStock() {
         try {
-            // 1. جلب مخزون المخزن
-            const stock = await supabaseRequest('warehouse_stock?select=product_id,quantity');
-            console.log('📦 stock:', stock);
-
-            // 2. جلب أسماء المنتجات مع التفاصيل
-            const productIds = [...new Set(stock.map(item => item.product_id).filter(id => id))];
-            console.log('📦 productIds:', productIds);
+            console.log('🔄 loadWarehouseStock بدأت');
             
-            let productMap = {};
-            if (productIds.length > 0) {
-                const productQuery = productIds.map(id => `id.eq.${id}`).join(',');
-                const products = await supabaseRequest(`products?select=id,name,code,category,min_stock&or=(${productQuery})`);
-                console.log('📦 products from DB:', products);
-                
-                for (const p of products) {
-                    productMap[p.id] = p;
-                }
-                console.log('📦 productMap:', productMap);
-            }
+            // 1. جلب جميع المنتجات النشطة
+            const allProducts = await supabaseRequest(`
+                products?select=id,name,code,category,min_stock&is_active=eq.true&order=name.asc
+            `);
+            console.log('📦 allProducts:', allProducts.length);
+            
+            // 2. جلب مخزون المخزن
+            const stock = await supabaseRequest('warehouse_stock?select=product_id,quantity');
+            console.log('📦 stock:', stock.length);
+            
+            // 3. عمل Map للمخزون
+            const stockMap = {};
+            stock.forEach(item => {
+                stockMap[item.product_id] = item.quantity;
+            });
+            
+            // 4. دمج البيانات
+            this.currentData = allProducts.map(product => {
+                const quantity = stockMap[product.id] || 0;
+                return {
+                    product_id: product.id,
+                    quantity: quantity,
+                    products: {
+                        name: product.name,
+                        code: product.code || '',
+                        category: product.category || '',
+                        min_stock: product.min_stock || 10
+                    }
+                };
+            });
 
-            // 3. دمج البيانات
-            this.currentData = stock.map(item => ({
-                ...item,
-                products: productMap[item.product_id] || { 
-                    name: 'غير معروف', 
-                    code: '', 
-                    category: '', 
-                    min_stock: 10 
-                }
-            }));
-
+            console.log('📦 currentData:', this.currentData.length);
+            
+            // 5. عرض في الجدول
             this.renderTable(this.currentData);
 
         } catch (error) {
@@ -129,7 +142,6 @@ class StockReportManager {
                 return;
             }
             
-            // ✅ حفظ الخيار الافتراضي
             const defaultOption = document.createElement('option');
             defaultOption.value = 'all';
             defaultOption.textContent = 'جميع الفئات';

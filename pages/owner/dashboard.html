@@ -86,7 +86,7 @@
         </div>
       </div>
 
-      <!-- بطاقات الإحصائيات -->
+      <!-- ✅ بطاقات الإحصائيات -->
       <div class="row g-4 mb-4">
         <div class="col-lg-3 col-md-6">
           <div class="stat-card">
@@ -118,8 +118,52 @@
         </div>
       </div>
 
-      <!-- المخططات -->
-      <div class="row g-4">
+      <!-- ✅ فلاتر (قبل المخططات عشان تؤثر عليها) -->
+      <div class="filter-section">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">من تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateFrom"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">إلى تاريخ</label>
+            <input
+              type="date"
+              class="form-control form-control-custom"
+              id="filterDateTo"
+            />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label form-label-custom">الفرع</label>
+            <select class="form-control form-control-custom" id="filterBranch">
+              <option value="all">جميع الفروع</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <div class="d-flex gap-2 mt-4">
+              <button
+                class="btn btn-secondary-custom w-50"
+                onclick="applyFilters()"
+              >
+                <i class="fas fa-filter"></i> تطبيق
+              </button>
+              <button
+                class="btn btn-outline-secondary w-50"
+                onclick="resetFilters()"
+              >
+                <i class="fas fa-undo"></i> إعادة تعيين
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ المخططات -->
+      <div class="row g-4 mt-2">
         <!-- الصف الأول: كاردين جنب بعض -->
         <div class="col-lg-6">
           <div class="chart-container">
@@ -169,79 +213,7 @@
         </div>
       </div>
 
-      <!-- فلاتر -->
-      <div class="filter-section">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label class="form-label form-label-custom">من تاريخ</label>
-            <input
-              type="date"
-              class="form-control form-control-custom"
-              id="filterDateFrom"
-            />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label form-label-custom">إلى تاريخ</label>
-            <input
-              type="date"
-              class="form-control form-control-custom"
-              id="filterDateTo"
-            />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label form-label-custom">الفرع</label>
-            <select class="form-control form-control-custom" id="filterBranch">
-              <option value="all">جميع الفروع</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <div class="d-flex gap-2 mt-4">
-              <button
-                class="btn btn-secondary-custom w-50"
-                onclick="applyFilters()"
-              >
-                <i class="fas fa-filter"></i> تطبيق
-              </button>
-              <button
-                class="btn btn-outline-secondary w-50"
-                onclick="resetFilters()"
-              >
-                <i class="fas fa-undo"></i> إعادة تعيين
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- جدول المبيعات الأخيرة -->
-      <div class="card mt-4">
-        <div class="card-header"><i class="fas fa-clock"></i> آخر المبيعات</div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-custom mb-0">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>الفرع</th>
-                  <th>المنتج</th>
-                  <th>الكمية</th>
-                  <th>التاريخ</th>
-                  <th>الحالة</th>
-                </tr>
-              </thead>
-              <tbody id="recentSalesTable">
-                <tr>
-                  <td colspan="6" class="text-center text-muted">
-                    لا توجد بيانات
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- جدول المبيعات الأخيرة (قراءة فقط) -->
+      <!-- ✅ جدول المبيعات الأخيرة (مرة واحدة فقط) -->
       <div class="card mt-4">
         <div class="card-header">
           <i class="fas fa-clock"></i> آخر المبيعات
