@@ -107,8 +107,7 @@ class BranchDashboard {
         `);
 
       // 2. جلب مخزون الفرع
-      const stockResponse = await supabaseRequest(`            ${product.category || ''} 
-
+      const stockResponse = await supabaseRequest(`
             branch_stock?select=product_id,quantity&branch_id=eq.${this.branchId}
         `);
 
@@ -127,15 +126,14 @@ class BranchDashboard {
         return;
       }
 
-      container.innerHTML = products
-        .map((product) => {
-          const stock = stockMap[product.id] || 0;
-          const currentQty = this.salesData[product.id] || 0;
+      // ✅ استخدام forEach أو map بشكل صحيح
+      let html = "";
+      products.forEach((product) => {
+        const stock = stockMap[product.id] || 0;
+        const currentQty = this.salesData[product.id] || 0;
+        const isDisabled = stock === 0;
 
-          // ✅ لو المخزون صفر، خلي الحقل disabled
-          const isDisabled = stock === 0;
-
-          return `
+        html += `
                 <div class="product-item ${isDisabled ? "opacity-50" : ""}">
                     <div class="product-info">
                         <span class="product-name">${product.name}</span>
@@ -164,8 +162,9 @@ class BranchDashboard {
                     </div>
                 </div>
             `;
-        })
-        .join("");
+      });
+
+      container.innerHTML = html;
     } catch (error) {
       console.error("خطأ في تحميل المنتجات:", error);
       document.getElementById("productsList").innerHTML = `
